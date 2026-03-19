@@ -6,7 +6,7 @@
 
 ### claude
 
-放进同名文件夹下即可
+放进同名文件夹下即可，如 `.cluade/commands/sslb.md`
 
 #### commands
 
