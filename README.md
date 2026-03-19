@@ -54,8 +54,8 @@ npx skills add https://github.com/orziz/AISkills
 
 ## 效果展示
 
-[!图片](./assets/image_0.png)
-[!图片](./assets/image_1.png)
+![效果图0](./assets/image_0.png)
+![效果图2](./assets/image_1.png)
 
 ## 其他
 
