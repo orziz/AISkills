@@ -6,7 +6,7 @@
 
 ### 自动安装
 
-直接使用（copilot无法自动安装，cluade也推荐手动安装）：
+直接使用（酌情使用吧，cluade和copilot其实更推荐手动）：
 
 ```bash
 npx skills add https://github.com/orziz/AISkills
