@@ -19,6 +19,7 @@ npx skills add https://github.com/orziz/AISkills
 当前已提供：
 
 - `skills/sslb/SKILL.md`
+- `skills/hgsc/SKILL.md`
 
 ### 手动安装
 
