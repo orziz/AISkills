@@ -1,73 +1,152 @@
 # AISkills
 
-本 Repo 主要是用于一些基本的AI编程相关的辅助，提升趣味性及优化流程
+一个偏中文语境、偏实战使用的 AI 编程辅助技能仓库。
+
+主要用来做三类事：
+
+- 让常用提示词/审查流更稳定
+- 让 Claude / Copilot / Trae 的安装方式更统一
+- 在保证可用性的前提下，顺手保留一点风格化和趣味性
+
+---
+
+## 项目简介
+
+本仓库收集了一些适合日常开发使用的 skills，重点放在：
+
+- 代码审查
+- 工作内容整理
+- skill 安装与同步
+
+设计思路比较简单：
+
+- `skills/` 目录下放标准 skill 源文件
+- 按不同工具链生成或手动放置对应版本
+- 尽量保持结构清晰、安装直接、复制成本低
+
+---
+
+## Skills 一览
+
+本仓库当前提供以下 skills：
+
+| Skill | 简介 | 适用场景 |
+| --- | --- | --- |
+| `sslb` | 三省六部式代码审查，分阶段输出结构化结论 | 需要更正式、更有层次地做代码 review |
+| `hgsc` | 后宫分位式代码审查，用角色分工输出审查意见 | 想让代码 review 更有风格，但仍保持专业判断 |
+| `ribao` | 根据工作内容、总结或 git 变更生成成果描述 | 写日报、commit message、PR message |
+| `xzskill` | 基于标准 `skills` 目录生成手动安装版本并同步 README | 维护或新增 skill 时做多端同步 |
+
+标准安装入口：
+
+- `skills/<skill-name>/SKILL.md`
+
+当前对应文件：
+
+- `skills/sslb/SKILL.md`
+- `skills/hgsc/SKILL.md`
+- `skills/ribao/SKILL.md`
+- `skills/xzskill/SKILL.md`
+
+---
 
 ## 如何使用
 
-### 自动安装
+### 1. 自动安装
 
-直接使用（酌情使用吧，cluade和copilot其实更推荐手动）：
+如果你使用支持 `skills add` 的方式，可以直接执行：
 
 ```bash
 npx skills add https://github.com/orziz/AISkills
 ```
 
-本仓库面向 `skills add` 的安装入口为：
+仓库中的标准 skill 安装入口为：
 
 - `skills/<skill-name>/SKILL.md`
 
-当前已提供：
+> 是否自动安装看个人习惯。就我自己的使用体验来说，Claude 和 Copilot 很多时候手动接入反而更稳、更可控。
 
-- `skills/sslb/SKILL.md`
-- `skills/hgsc/SKILL.md`
-- `skills/ribao/SKILL.md`
+### 2. 手动安装
 
-### 手动安装
+#### Claude
 
-#### claude（推荐手动安装方式）
+更推荐手动安装。
 
-手动安装时，放进同名文件夹下即可，如 `.claude/commands/sslb.md`。
+将对应 skill 放入 `.claude/commands/` 目录即可，例如：
 
-如果使用 `npx skills add`，则读取仓库内的标准 skill 目录：`skills/sslb/SKILL.md`。
+- `.claude/commands/sslb.md`
 
-##### commands
+之后在输入框中使用对应命令触发，例如：
 
-由 claude 的指令触发，输入框输入 `/指令名` 即可，如 `/sslb`。
+- `/sslb`
 
-（如路径正确却没有对应指令，可以重启一下claude终端或编辑器重试）
+补充说明：
 
-#### copilot
+- 如果使用 `npx skills add`，Claude 读取的是标准 skill 源：`skills/sslb/SKILL.md`
+- 如果路径正确但命令没有出现，可以尝试重启 Claude 终端或编辑器
 
-将 `.github/skills` 下面的内容，酌情复制到 `.github/copilot-instructions.md` 里即可
-> 因为copilot会自行读 `.github/copilot-instructions.md` 所以无需其他操作
+#### Copilot
 
-#### trae
+将 `.github/skills` 中对应内容按需复制到：
 
-放进同名文件夹下即可，`rules` 和 `skills` 二选一
+- `.github/copilot-instructions.md`
 
-###### rules
+> Copilot 会自行读取 `.github/copilot-instructions.md`，一般不需要额外配置。
 
-这里每次对话都会读，自行决定是否放在这
+#### Trae
 
-###### skills
+放入同名目录即可，`rules` 和 `skills` 二选一。
 
-这里是指令触发，推荐放这吧，如 `使用三审六部来审查XXX`
+##### `rules`
+
+- 每次对话都会读取
+- 适合希望全局持续生效的内容
+
+##### `skills`
+
+- 通过指令或自然语言触发
+- 更适合像“使用三省六部来审查 XXX”这类场景
+
+---
+
+## 目录说明
+
+```text
+skills/                标准 skill 源文件
+.claude/commands/      Claude 手动安装版本
+.github/skills/        GitHub / Copilot 适配版本
+.trae/skills/          Trae skill 版本
+.trae/rules/           Trae rule 版本
+assets/                README 配图
+```
+
+---
 
 ## 效果展示
 
 ![效果图0](./assets/image_0.png)
 ![效果图2](./assets/image_1.png)
 
+---
+
+## 适合谁用
+
+如果你刚好有下面这些需求，这个仓库应该会比较顺手：
+
+- 想把常用 prompt 固化成可复用 skill
+- 想让代码审查输出更结构化一些
+- 想在“能用”和“有点意思”之间找个平衡
+- 想同时兼顾 Claude、Copilot、Trae 等不同入口
+
+---
+
 ## 其他
 
-如果大家有什么好玩的，也欢迎 star 和 PR
+欢迎 star，也欢迎提 PR 一起补充更好玩的 skill。
 
 ### 灵感来源
 
-确实有看到一些其他 repo 产生的想法，觉得好玩，就搞了个编程相关的自用。
+确实参考过一些有意思的仓库和玩法，觉得挺好玩，就做了一个偏编程场景、自用为主的整理版本。
 
-灵感来源（不一一列举）：
-
-* [https://github.com/cft0808/edict](https://github.com/cft0808/edict)
-
-* [https://github.com/wanikua/danghuangshang](https://github.com/wanikua/danghuangshang)
+- [cft0808/edict](https://github.com/cft0808/edict)
+- [wanikua/danghuangshang](https://github.com/wanikua/danghuangshang)
