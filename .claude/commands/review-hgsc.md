@@ -1,7 +1,6 @@
 ---
+name: review-hgsc
 description: 使用后宫分位式代码审查，按皇后、四妃、九嫔分工输出结构化审查结论
-allowed-tools: [Read, Glob, Grep, Bash(git diff:*), Bash(git log:*)]
-argument-hint: [文件路径、目录路径、或留空审查 git diff]
 ---
 
 用户输入：

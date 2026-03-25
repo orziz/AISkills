@@ -2,7 +2,7 @@
 name: xzskill
 description: 基于 skills 目录中的标准技能，生成对应的手动安装版本并同步 README
 allowed-tools: [Bash(node scripts/xzskill.js:*)]
-argument-hint: [skill 名称，例如 sslb]
+argument-hint: [skill 名称，例如 review-sslb]
 ---
 
 用户输入：
@@ -12,7 +12,7 @@ $ARGUMENTS
 
 ## 执行规则
 
-1. 只接受一个 skill 名称，例如：`sslb`。
+1. 只接受一个 skill 名称，例如：`review-sslb`。
 2. 若未传名称、传了多个名称、或无法明确解析为单个名称，提示用户重新输入。
 3. 直接执行：`node scripts/xzskill.js <skill-name>`。
 4. 不自己生成目标文件内容，不自行改写规则，不扫描无关 skill。

@@ -32,10 +32,12 @@
 
 | Skill | 简介 | 适用场景 | 对应文件 |
 | --- | --- | --- | --- |
-| `sslb` | 三省六部式代码审查，分阶段输出结构化结论 | 需要更正式、更有层次地做代码 review | `skills/sslb/SKILL.md` |
-| `hgsc` | 后宫分位式代码审查，用角色分工输出审查意见 | 想让代码 review 更有风格，但仍保持专业判断 | `skills/hgsc/SKILL.md` |
-| `ribao` | 根据工作内容、总结或 git 变更生成成果描述 | 写日报、commit message、PR message | `skills/ribao/SKILL.md` |
 | `xzskill` | 基于标准 `skills` 目录生成手动安装版本并同步 README | 维护或新增 skill 时做多端同步（现由本地 Node 脚本执行） | `skills/xzskill/SKILL.md` |
+| `ribao` | 根据工作内容、总结或 git 变更生成成果描述 | 写日报、commit message、PR message | `skills/ribao/SKILL.md` |
+| `review-sslb` | 三省六部式代码审查，分阶段输出结构化结论 | 需要更正式、更有层次地做代码 review | `skills/review-sslb/SKILL.md` |
+| `review-hgsc` | 后宫分位式代码审查，用角色分工输出审查意见 | 想让代码 review 更有风格，但仍保持专业判断 | `skills/review-hgsc/SKILL.md` |
+| `review-gal` | gal 路线分支式代码审查，用路线分歧与 true end 输出结构化结论 | 需要比较实现路线、收束方案分歧时的 review | `skills/review-gal/SKILL.md` |
+| `review-band` | 少女乐队分工式代码审查，用成员分轨点评输出结构化结论 | 想做更有角色感、但仍专业可执行的 PR review | `skills/review-band/SKILL.md` |
 
 标准安装入口：
 
@@ -67,15 +69,15 @@ npx skills add https://github.com/orziz/AISkills
 
 将对应 skill 放入 `.claude/commands/` 目录即可，例如：
 
-- `.claude/commands/sslb.md`
+- `.claude/commands/review-sslb.md`
 
 之后在输入框中使用对应命令触发，例如：
 
-- `/sslb`
+- `/review-sslb`
 
 补充说明：
 
-- 如果使用 `npx skills add`，Claude 读取的是标准 skill 源：`skills/sslb/SKILL.md`
+- 如果使用 `npx skills add`，Claude 读取的是标准 skill 源：`skills/review-sslb/SKILL.md`
 - 如果路径正确但命令没有出现，可以尝试重启 Claude 终端或编辑器
 
 #### Copilot

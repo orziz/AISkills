@@ -10,7 +10,7 @@ const DEFAULT_SCENARIO = '维护或新增 skill 时做多端同步'
 const CLAUDE_ARGUMENT_BLOCK = '\n用户输入：\n$ARGUMENTS\n\n'
 const MISSING_SOURCE_TEMPLATE = '错误：skills/{name}/SKILL.md 不存在，无法生成手动安装版本。'
 const SELF_REFERENCE_ERROR = '错误：xzskill 不支持生成自身的手动安装版本，请改为处理其他 skill。'
-const USAGE_ERROR = '错误：请只传入一个 skill 名称，例如：xzskill sslb'
+const USAGE_ERROR = '错误：请只传入一个 skill 名称，例如：xzskill review-sslb'
 
 function main() {
   const args = process.argv.slice(2)

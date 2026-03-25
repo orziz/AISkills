@@ -1,8 +1,6 @@
 ---
-name: sslb
+name: review-sslb
 description: 使用三省六部式代码审查，按中书省、尚书省、六部、门下省、锦衣卫五阶段输出结构化审查结论
-allowed-tools: [Read, Glob, Grep, Bash(git diff:*), Bash(git log:*)]
-argument-hint: [文件路径、目录路径、或留空审查 git diff]
 ---
 
 用户输入：
