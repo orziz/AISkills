@@ -39,6 +39,7 @@ function main() {
   const { frontmatter: sourceFrontmatter, body: sourceBody } = splitFrontmatter(sourceText)
   const sourceName = getFrontmatterValue(sourceFrontmatter, 'name') || skillName
   const description = getFrontmatterValue(sourceFrontmatter, 'description') || ''
+  const scenario = getFrontmatterValue(sourceFrontmatter, 'scenario') || DEFAULT_SCENARIO
 
   const existingClaudeText = fs.existsSync(existingClaudePath) ? readNormalized(existingClaudePath) : null
   const existingClaude = existingClaudeText ? splitClaudeWrapper(existingClaudeText) : null
@@ -67,7 +68,7 @@ function main() {
     writeFile(filePath, content)
   }
 
-  const readmeStatus = syncReadme(readmePath, skillName, description)
+  const readmeStatus = syncReadme(readmePath, skillName, description, scenario)
 
   console.log(`源文件：skills/${skillName}/SKILL.md`)
   console.log('已更新：')
@@ -248,28 +249,34 @@ function buildGenericTarget({ name, description, body }) {
   return ensureTrailingNewline(content)
 }
 
-function syncReadme(readmePath, skillName, description) {
+function syncReadme(readmePath, skillName, description, scenario) {
   const text = readNormalized(readmePath)
-  const needle = `\`skills/${skillName}/SKILL.md\``
-  if (text.includes(needle)) {
-    return '已存在'
-  }
-
   const lines = text.split('\n')
   const headerIndex = lines.indexOf(README_TABLE_HEADER)
   if (headerIndex === -1) {
     return '未更新（未找到 Skills 表头）'
   }
 
+  const row = README_ROW_TEMPLATE
+    .replaceAll('{name}', skillName)
+    .replace('{description}', description)
+    .replace('{scenario}', scenario)
+
+  const skillPathToken = `\`skills/${skillName}/SKILL.md\``
+  const existingRowIndex = lines.findIndex((line, index) => index > headerIndex && line.includes(skillPathToken))
+  if (existingRowIndex !== -1) {
+    if (lines[existingRowIndex] === row) {
+      return '已存在'
+    }
+    lines[existingRowIndex] = row
+    writeFile(readmePath, lines.join('\n'))
+    return '已更新'
+  }
+
   let insertAt = headerIndex + 2
   while (insertAt < lines.length && lines[insertAt].startsWith('|')) {
     insertAt += 1
   }
-
-  const row = README_ROW_TEMPLATE
-    .replaceAll('{name}', skillName)
-    .replace('{description}', description)
-    .replace('{scenario}', DEFAULT_SCENARIO)
 
   lines.splice(insertAt, 0, row)
   writeFile(readmePath, lines.join('\n'))
