@@ -49,26 +49,101 @@ const TARGETS = [
 ]
 const MISSING_SOURCE_TEMPLATE = '错误：skills/{name}/SKILL.md 不存在，无法生成手动安装版本。'
 const SELF_REFERENCE_ERROR = '错误：xzskill 不支持生成自身的手动安装版本，请改为处理其他 skill。'
-const USAGE_ERROR = '错误：请只传入一个 skill 名称，例如：xzskill review-sslb'
+const USAGE_ERROR = '错误：请至少传入一个 skill 名称，例如：xzskill review-sslb harness-sslb'
 
 function main() {
-  const args = process.argv.slice(2)
-  if (args.length !== 1) {
+  const skillNames = parseSkillNames(process.argv.slice(2))
+  if (skillNames.length === 0) {
     fail(USAGE_ERROR)
-  }
-
-  const skillName = args[0].trim()
-  if (!skillName || /\s/.test(skillName)) {
-    fail(USAGE_ERROR)
-  }
-  if (skillName === SELF_SKILL) {
-    fail(SELF_REFERENCE_ERROR)
   }
 
   const repoRoot = path.resolve(__dirname, '..')
-  const sourceDir = path.join(repoRoot, 'skills', skillName)
-  const sourcePath = path.join(repoRoot, 'skills', skillName, 'SKILL.md')
   const readmePath = path.join(repoRoot, 'README.md')
+  const skillPayloads = skillNames.map((skillName) => loadSkillPayload(repoRoot, skillName))
+
+  for (const payload of skillPayloads) {
+    const outputs = new Map()
+    const resourceOutputs = []
+
+    for (const target of TARGETS) {
+      const targetRoot = path.join(repoRoot, ...target.rootSegments)
+      const entryRelativePath = target.entryRelativePath(payload.skillName)
+      const entryPath = path.join(targetRoot, entryRelativePath)
+      const targetBody = target.rewriteResourcePaths
+        ? rewriteBundledResourcePaths(payload.sourceBody, `${payload.skillName}/`, payload.bundledResourceDirs)
+        : payload.sourceBody
+
+      const content =
+        target.kind === 'claude'
+          ? buildClaudeTarget({
+              name: payload.sourceName,
+              description: payload.description,
+              body: targetBody,
+              existingClaude: payload.existingClaude,
+            })
+          : buildGenericTarget({
+              name: payload.sourceName,
+              description: payload.description,
+              body: targetBody,
+            })
+
+      removeLegacyEntries(targetRoot, payload.skillName, target.legacyEntryRelativePaths(payload.skillName))
+      fs.mkdirSync(path.dirname(entryPath), { recursive: true })
+      writeFile(entryPath, content)
+      outputs.set(entryPath, content)
+
+      resourceOutputs.push(
+        ...syncBundledResourcesForTarget({
+          repoRoot,
+          sourceDir: payload.sourceDir,
+          skillName: payload.skillName,
+          bundledResourceDirs: payload.bundledResourceDirs,
+          targetRoot,
+          targetSkillDir: path.join(targetRoot, target.resourceBaseDir(payload.skillName)),
+        })
+      )
+    }
+
+    const readmeStatus = syncReadme(readmePath, payload.skillName, payload.description, payload.sourceScenario)
+
+    console.log(`源文件：skills/${payload.skillName}/SKILL.md`)
+    console.log('已更新：')
+    for (const filePath of outputs.keys()) {
+      console.log(`- ${path.relative(repoRoot, filePath)}`)
+    }
+    for (const resourcePath of resourceOutputs) {
+      console.log(`- ${resourcePath}`)
+    }
+    console.log(`- README：${readmeStatus}`)
+    console.log('已按最小必要范围完成同步。')
+  }
+}
+
+function parseSkillNames(args) {
+  const parsed = []
+  const seen = new Set()
+
+  for (const rawArg of args) {
+    const skillName = rawArg.trim()
+    if (!skillName || /\s/.test(skillName)) {
+      fail(USAGE_ERROR)
+    }
+    if (skillName === SELF_SKILL) {
+      fail(SELF_REFERENCE_ERROR)
+    }
+    if (seen.has(skillName)) {
+      continue
+    }
+    seen.add(skillName)
+    parsed.push(skillName)
+  }
+
+  return parsed
+}
+
+function loadSkillPayload(repoRoot, skillName) {
+  const sourceDir = path.join(repoRoot, 'skills', skillName)
+  const sourcePath = path.join(sourceDir, 'SKILL.md')
   const existingClaudePath = path.join(repoRoot, '.claude', 'commands', `${skillName}.md`)
 
   if (!fs.existsSync(sourcePath)) {
@@ -81,64 +156,19 @@ function main() {
   const description = getFrontmatterValue(sourceFrontmatter, 'description') || ''
   const sourceScenario = getFrontmatterValue(sourceFrontmatter, 'scenario')
   const bundledResourceDirs = getBundledResourceDirs(sourceDir)
-
   const existingClaudeText = fs.existsSync(existingClaudePath) ? readNormalized(existingClaudePath) : null
   const existingClaude = existingClaudeText ? splitClaudeWrapper(existingClaudeText) : null
 
-  const outputs = new Map()
-  const resourceOutputs = []
-
-  for (const target of TARGETS) {
-    const targetRoot = path.join(repoRoot, ...target.rootSegments)
-    const entryRelativePath = target.entryRelativePath(skillName)
-    const entryPath = path.join(targetRoot, entryRelativePath)
-    const targetBody = target.rewriteResourcePaths
-      ? rewriteBundledResourcePaths(sourceBody, `${skillName}/`, bundledResourceDirs)
-      : sourceBody
-
-    const content =
-      target.kind === 'claude'
-        ? buildClaudeTarget({
-            name: sourceName,
-            description,
-            body: targetBody,
-            existingClaude,
-          })
-        : buildGenericTarget({
-            name: sourceName,
-            description,
-            body: targetBody,
-          })
-
-    removeLegacyEntries(targetRoot, skillName, target.legacyEntryRelativePaths(skillName))
-    fs.mkdirSync(path.dirname(entryPath), { recursive: true })
-    writeFile(entryPath, content)
-    outputs.set(entryPath, content)
-
-    resourceOutputs.push(
-      ...syncBundledResourcesForTarget({
-        repoRoot,
-        sourceDir,
-        skillName,
-        bundledResourceDirs,
-        targetRoot,
-        targetSkillDir: path.join(targetRoot, target.resourceBaseDir(skillName)),
-      })
-    )
+  return {
+    skillName,
+    sourceDir,
+    sourceBody,
+    sourceName,
+    description,
+    sourceScenario,
+    bundledResourceDirs,
+    existingClaude,
   }
-
-  const readmeStatus = syncReadme(readmePath, skillName, description, sourceScenario)
-
-  console.log(`源文件：skills/${skillName}/SKILL.md`)
-  console.log('已更新：')
-  for (const filePath of outputs.keys()) {
-    console.log(`- ${path.relative(repoRoot, filePath)}`)
-  }
-  for (const resourcePath of resourceOutputs) {
-    console.log(`- ${resourcePath}`)
-  }
-  console.log(`- README：${readmeStatus}`)
-  console.log('已按最小必要范围完成同步。')
 }
 
 function fail(message) {
