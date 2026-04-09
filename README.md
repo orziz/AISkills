@@ -49,7 +49,7 @@
 
 ## 如何使用
 
-### 1. 自动安装
+### 1. 自动安装（推荐！）
 
 如果你使用支持 `skills add` 的方式，可以直接执行：
 
@@ -60,8 +60,6 @@ npx skills add https://github.com/orziz/AISkills
 仓库中的标准 skill 安装入口为：
 
 - `skills/<skill-name>/SKILL.md`
-
-> 是否自动安装看个人习惯。就我自己的使用体验来说，Claude 和 Copilot 很多时候手动接入反而更稳、更可控。
 
 ### 2. 手动安装
 
