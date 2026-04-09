@@ -1,5 +1,6 @@
 ---
 name: review-anime
+readme-section: review
 description: 使用 anime 多角色连续对话式代码审查，以强角色互动输出带自然技术锚点的审查意见
 ---
 

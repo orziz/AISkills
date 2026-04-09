@@ -1,5 +1,6 @@
 ---
 name: skill-sync
+readme-section: maintenance
 description: 基于标准源 skill 生成各端安装版本，并对 README 做最小范围回写
 scenario: skill 定稿后的多端同步、README 回写与安装版本更新
 ---
@@ -12,7 +13,7 @@ scenario: skill 定稿后的多端同步、README 回写与安装版本更新
 
 这里的职责是“同步分发”，不是“起草源文件”。
 
-- 源文件与 support files 由 `skill-author` 或用户直接维护
+- 源文件与 support files 由用户、上游整理流程或其他作者型工具直接维护
 - `skill-sync` 只负责把标准源同步到 Claude / GitHub / Trae，并回写 README
 
 ## 输入约束
@@ -41,6 +42,8 @@ scenario: skill 定稿后的多端同步、README 回写与安装版本更新
 8. 先解析源文件 frontmatter：
    - 读取 `name`
    - 读取 `description`
+   - 可选读取 `readme-section`
+   - 可选读取 `replaces`
 9. 再取源文件 frontmatter 之后的正文，作为唯一正文载荷；正文段落顺序、标题层级、代码块、措辞保持原样。
 10. 直接基于源文件内容生成或覆盖以下目标文件：
    - `.claude/commands/<skill-name>.md`
@@ -60,8 +63,11 @@ scenario: skill 定稿后的多端同步、README 回写与安装版本更新
 13. 更新 `README.md` 时，只处理“当前已提供”列表：
    - 若列表中不存在 `工程根目录/skills/<skill-name>/SKILL.md`，则追加一行
    - 若已存在，则不重复添加
+   - 若 frontmatter 显式提供 `readme-section`，则按该分组落位；否则才按命名前缀推断
+   - 若 frontmatter 提供 `replaces`，则同步清理旧 skill 名对应的 README 行
    - 不修改 README 其他段落，不重写全文
-14. 全程只处理当前指定的 skill，完成后停止。
+14. 若 frontmatter 提供 `replaces`，则同步清理旧 skill 名对应的手动安装产物。
+15. 全程只处理当前指定的 skill，完成后停止。
 
 ## 严格限制
 
@@ -76,6 +82,7 @@ scenario: skill 定稿后的多端同步、README 回写与安装版本更新
 9. 不自行推断平台差异，不自行设计额外字段；凡源文件未写明、规则未写死的内容，一律不补。
 10. 若生成规则已固定，就按固定模板执行；不要反复比较“是否还能更像目标平台”。
 11. 写入目标文件时，凡规则中出现的 `$ARGUMENTS`，都按普通文本占位符处理，禁止展开、禁止替换、禁止引用当前传入参数。
+12. 不假设源文件一定由某个特定 skill 产出；只要符合 `skills/<skill-name>/SKILL.md` 约定，就按同一规则处理。
 
 ## 失败输出
 

@@ -6,6 +6,11 @@ const path = require('path')
 const README_TABLE_HEADER = '| Skill | 简介 | 适用场景 | 对应文件 |'
 const README_ROW_TEMPLATE = '| `{name}` | {description} | {scenario} | `skills/{name}/SKILL.md` |'
 const DEFAULT_SCENARIO = 'skill 定稿后的多端同步'
+const README_SECTION_HEADINGS = {
+  main: '### 面向大多数使用者',
+  review: '### 审查类 skill',
+  maintenance: '### 仓库维护工具',
+}
 const CLAUDE_ARGUMENT_BLOCK = '\n用户输入：\n$ARGUMENTS\n\n'
 const BUNDLED_RESOURCE_DIRS = ['references', 'assets', 'scripts']
 const TARGETS = [
@@ -62,6 +67,7 @@ function main() {
   for (const payload of skillPayloads) {
     const outputs = new Map()
     const resourceOutputs = []
+    const cleanupOutputs = []
 
     for (const target of TARGETS) {
       const targetRoot = path.join(repoRoot, ...target.rootSegments)
@@ -85,7 +91,15 @@ function main() {
               body: targetBody,
             })
 
-      removeLegacyEntries(targetRoot, payload.skillName, target.legacyEntryRelativePaths(payload.skillName))
+      cleanupOutputs.push(...removeLegacyEntries(targetRoot, target.legacyEntryRelativePaths(payload.skillName), repoRoot))
+      cleanupOutputs.push(
+        ...removeReplacedSkillArtifacts({
+          repoRoot,
+          targetRoot,
+          target,
+          replacedSkillNames: payload.replaces,
+        })
+      )
       fs.mkdirSync(path.dirname(entryPath), { recursive: true })
       writeFile(entryPath, content)
       outputs.set(entryPath, content)
@@ -102,7 +116,14 @@ function main() {
       )
     }
 
-    const readmeStatus = syncReadme(readmePath, payload.skillName, payload.description, payload.sourceScenario)
+    const readmeStatus = syncReadme(
+      readmePath,
+      payload.skillName,
+      payload.description,
+      payload.sourceScenario,
+      payload.readmeSection,
+      payload.replaces
+    )
 
     console.log(`源文件：skills/${payload.skillName}/SKILL.md`)
     console.log('已更新：')
@@ -112,7 +133,13 @@ function main() {
     for (const resourcePath of resourceOutputs) {
       console.log(`- ${resourcePath}`)
     }
-    console.log(`- README：${readmeStatus}`)
+    if (cleanupOutputs.length > 0) {
+      console.log('已清理：')
+      for (const relativePath of cleanupOutputs) {
+        console.log(`- ${relativePath}`)
+      }
+    }
+    console.log(`- README：${readmeStatus.message}`)
     console.log('已按最小必要范围完成同步。')
   }
 }
@@ -150,6 +177,8 @@ function loadSkillPayload(repoRoot, skillName) {
   const sourceName = getFrontmatterValue(sourceFrontmatter, 'name') || skillName
   const description = getFrontmatterValue(sourceFrontmatter, 'description') || ''
   const sourceScenario = getFrontmatterValue(sourceFrontmatter, 'scenario')
+  const readmeSection = getFrontmatterValue(sourceFrontmatter, 'readme-section')
+  const replaces = getFrontmatterList(sourceFrontmatter, 'replaces').filter((name) => name !== skillName)
   const bundledResourceDirs = getBundledResourceDirs(sourceDir)
   const existingClaudeText = fs.existsSync(existingClaudePath) ? readNormalized(existingClaudePath) : null
   const existingClaude = existingClaudeText ? splitClaudeWrapper(existingClaudeText) : null
@@ -161,6 +190,8 @@ function loadSkillPayload(repoRoot, skillName) {
     sourceName,
     description,
     sourceScenario,
+    readmeSection,
+    replaces,
     bundledResourceDirs,
     existingClaude,
   }
@@ -176,7 +207,11 @@ function readNormalized(filePath) {
 }
 
 function writeFile(filePath, content) {
-  fs.writeFileSync(filePath, ensureTrailingNewline(content).replace(/\r\n/g, '\n'), 'utf8')
+  const eol = detectLineEnding(filePath)
+  const normalized = ensureTrailingNewline(content)
+    .replace(/\r\n/g, '\n')
+    .replace(/\n/g, eol)
+  fs.writeFileSync(filePath, normalized, 'utf8')
 }
 
 function splitFrontmatter(text) {
@@ -222,6 +257,49 @@ function getFrontmatterValue(frontmatter, key) {
   }
   const trimmed = value.trim()
   return trimmed || null
+}
+
+function getFrontmatterList(frontmatter, key) {
+  const value = frontmatter[key]
+  if (typeof value !== 'string') {
+    return []
+  }
+
+  const trimmed = value.trim()
+  if (!trimmed) {
+    return []
+  }
+
+  if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+    return normalizeListValues(trimmed.slice(1, -1).split(','))
+  }
+
+  const multilineItems = trimmed
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+
+  if (multilineItems.length > 0 && multilineItems.every((line) => line.startsWith('- '))) {
+    return normalizeListValues(multilineItems.map((line) => line.slice(2)))
+  }
+
+  return normalizeListValues([trimmed])
+}
+
+function normalizeListValues(values) {
+  const normalized = []
+  const seen = new Set()
+
+  for (const rawValue of values) {
+    const value = rawValue.trim().replace(/^['"]|['"]$/g, '')
+    if (!value || seen.has(value)) {
+      continue
+    }
+    seen.add(value)
+    normalized.push(value)
+  }
+
+  return normalized
 }
 
 function splitClaudeWrapper(text) {
@@ -383,17 +461,49 @@ function syncBundledResourcesForTarget({ repoRoot, sourceDir, skillName, bundled
   return written
 }
 
-function removeLegacyEntries(targetRoot, skillName, legacyEntryRelativePaths) {
-  for (const relativePath of legacyEntryRelativePaths) {
-    if (!relativePath) {
+function removeLegacyEntries(targetRoot, legacyEntryRelativePaths, repoRoot) {
+  return removeManagedPaths(targetRoot, legacyEntryRelativePaths, repoRoot)
+}
+
+function removeReplacedSkillArtifacts({ repoRoot, targetRoot, target, replacedSkillNames }) {
+  const relativePaths = []
+
+  for (const replacedSkillName of replacedSkillNames) {
+    relativePaths.push(target.entryRelativePath(replacedSkillName))
+    relativePaths.push(...target.legacyEntryRelativePaths(replacedSkillName))
+
+    const resourceBaseDir = target.resourceBaseDir(replacedSkillName)
+    if (resourceBaseDir) {
+      relativePaths.push(resourceBaseDir)
+    }
+  }
+
+  return removeManagedPaths(targetRoot, relativePaths, repoRoot)
+}
+
+function removeManagedPaths(rootPath, relativePaths, repoRoot) {
+  const targets = normalizeListValues(relativePaths)
+    .map((relativePath) => ({
+      relativePath,
+      absolutePath: path.join(rootPath, relativePath),
+      depth: relativePath.split(/[\\/]/).length,
+    }))
+    .sort((left, right) => right.depth - left.depth || right.relativePath.length - left.relativePath.length)
+
+  const removed = []
+
+  for (const target of targets) {
+    if (!fs.existsSync(target.absolutePath)) {
       continue
     }
 
-    const absolutePath = path.join(targetRoot, relativePath)
-    if (fs.existsSync(absolutePath)) {
-      fs.rmSync(absolutePath, { recursive: true, force: true })
+    fs.rmSync(target.absolutePath, { recursive: true, force: true })
+    if (repoRoot) {
+      removed.push(path.relative(repoRoot, target.absolutePath))
     }
   }
+
+  return removed
 }
 
 function removeManagedDir(dirPath) {
@@ -402,16 +512,24 @@ function removeManagedDir(dirPath) {
   }
 }
 
-function syncReadme(readmePath, skillName, description, scenario) {
+function syncReadme(readmePath, skillName, description, scenario, readmeSection, replaces = []) {
   const text = readNormalized(readmePath)
   const lines = text.split('\n')
-  const headerIndex = lines.indexOf(README_TABLE_HEADER)
+  const removedSkills = removeReadmeRows(lines, replaces)
+  const targetSection = resolveReadmeSection(skillName, readmeSection)
+  const headerIndex = findReadmeTableHeaderIndex(lines, targetSection)
   if (headerIndex === -1) {
-    return '未更新（未找到 Skills 表头）'
+    if (removedSkills.length > 0) {
+      writeFile(readmePath, lines.join('\n'))
+    }
+    return {
+      message: formatReadmeStatus('未更新（未找到 Skills 表头）', removedSkills),
+      removedSkills,
+    }
   }
 
   const skillPathToken = `\`skills/${skillName}/SKILL.md\``
-  const existingRowIndex = lines.findIndex((line, index) => index > headerIndex && line.includes(skillPathToken))
+  const existingRowIndex = lines.findIndex((line) => line.includes(skillPathToken))
   if (existingRowIndex !== -1) {
     const existingRow = parseReadmeRow(lines[existingRowIndex])
     const row = buildReadmeRow({
@@ -419,12 +537,33 @@ function syncReadme(readmePath, skillName, description, scenario) {
       description: description || existingRow?.description || '',
       scenario: scenario || existingRow?.scenario || DEFAULT_SCENARIO,
     })
-    if (lines[existingRowIndex] === row) {
-      return '已存在'
+    if (lines[existingRowIndex] === row && isReadmeRowInSection(lines, existingRowIndex, targetSection)) {
+      if (removedSkills.length > 0) {
+        writeFile(readmePath, lines.join('\n'))
+      }
+      return {
+        message: formatReadmeStatus('已存在', removedSkills),
+        removedSkills,
+      }
     }
-    lines[existingRowIndex] = row
+    if (isReadmeRowInSection(lines, existingRowIndex, targetSection)) {
+      lines[existingRowIndex] = row
+      writeFile(readmePath, lines.join('\n'))
+      return {
+        message: formatReadmeStatus('已更新', removedSkills),
+        removedSkills,
+      }
+    }
+
+    lines.splice(existingRowIndex, 1)
+    const relocatedHeaderIndex = findReadmeTableHeaderIndex(lines, targetSection)
+    const insertAt = findReadmeTableInsertIndex(lines, relocatedHeaderIndex)
+    lines.splice(insertAt, 0, row)
     writeFile(readmePath, lines.join('\n'))
-    return '已更新'
+    return {
+      message: formatReadmeStatus('已更新（已移动到对应分组）', removedSkills),
+      removedSkills,
+    }
   }
 
   const row = buildReadmeRow({
@@ -433,14 +572,80 @@ function syncReadme(readmePath, skillName, description, scenario) {
     scenario: scenario || DEFAULT_SCENARIO,
   })
 
+  const insertAt = findReadmeTableInsertIndex(lines, headerIndex)
+  lines.splice(insertAt, 0, row)
+  writeFile(readmePath, lines.join('\n'))
+  return {
+    message: formatReadmeStatus('已追加', removedSkills),
+    removedSkills,
+  }
+}
+
+function removeReadmeRows(lines, skillNames) {
+  const removed = []
+
+  for (const skillName of normalizeListValues(skillNames)) {
+    const skillPathToken = `\`skills/${skillName}/SKILL.md\``
+    let removedCurrentSkill = false
+    let rowIndex = lines.findIndex((line) => line.includes(skillPathToken))
+
+    while (rowIndex !== -1) {
+      lines.splice(rowIndex, 1)
+      removedCurrentSkill = true
+      rowIndex = lines.findIndex((line) => line.includes(skillPathToken))
+    }
+
+    if (removedCurrentSkill) {
+      removed.push(skillName)
+    }
+  }
+
+  return removed
+}
+
+function formatReadmeStatus(status, removedSkills) {
+  if (removedSkills.length === 0) {
+    return status
+  }
+  return `${status}；已移除旧 skill 条目：${removedSkills.join('、')}`
+}
+
+function resolveReadmeSection(skillName, readmeSection) {
+  if (readmeSection && Object.prototype.hasOwnProperty.call(README_SECTION_HEADINGS, readmeSection)) {
+    return readmeSection
+  }
+  if (skillName.startsWith('review-')) {
+    return 'review'
+  }
+  if (skillName.startsWith('skill-')) {
+    return 'maintenance'
+  }
+  return 'main'
+}
+
+function findReadmeTableHeaderIndex(lines, section) {
+  const heading = README_SECTION_HEADINGS[section]
+  const headingIndex = heading ? lines.indexOf(heading) : -1
+  if (headingIndex === -1) {
+    return lines.indexOf(README_TABLE_HEADER)
+  }
+  return lines.findIndex((line, index) => index > headingIndex && line === README_TABLE_HEADER)
+}
+
+function findReadmeTableInsertIndex(lines, headerIndex) {
   let insertAt = headerIndex + 2
   while (insertAt < lines.length && lines[insertAt].startsWith('|')) {
     insertAt += 1
   }
+  return insertAt
+}
 
-  lines.splice(insertAt, 0, row)
-  writeFile(readmePath, lines.join('\n'))
-  return '已追加'
+function isReadmeRowInSection(lines, rowIndex, section) {
+  const headerIndex = findReadmeTableHeaderIndex(lines, section)
+  if (headerIndex === -1) {
+    return false
+  }
+  return rowIndex >= headerIndex + 2 && rowIndex < findReadmeTableInsertIndex(lines, headerIndex)
 }
 
 function buildReadmeRow({ skillName, description, scenario }) {
@@ -466,6 +671,16 @@ function parseReadmeRow(line) {
 
 function ensureTrailingNewline(text) {
   return text.endsWith('\n') ? text : `${text}\n`
+}
+
+function detectLineEnding(filePath) {
+  if (fs.existsSync(filePath)) {
+    const text = fs.readFileSync(filePath, 'utf8')
+    if (text.includes('\r\n')) {
+      return '\r\n'
+    }
+  }
+  return process.platform === 'win32' ? '\r\n' : '\n'
 }
 
 main()

@@ -1,5 +1,6 @@
 ---
 name: feature-plan
+readme-section: main
 description: 在功能设计与问题诊断阶段分析需求并形成可执行方案，分别输出面向用户与面向 AI 的行动文档
 scenario: 功能设计、需求澄清、方案规划与 bug 诊断
 ---

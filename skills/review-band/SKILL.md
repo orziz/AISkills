@@ -1,5 +1,6 @@
 ---
 name: review-band
+readme-section: review
 description: 使用少女乐队分工式代码审查，按主唱、吉他、贝斯、鼓手、制作人分段输出结构化结论
 ---
 

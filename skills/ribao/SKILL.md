@@ -1,5 +1,6 @@
 ---
 name: ribao
+readme-section: main
 description: 根据当天工作内容、总结或 git 变更，生成一份可复用的结构化成果描述；可直接用于日报、git commit message 或 git PR message
 ---
 
