@@ -8,6 +8,45 @@ const README_TABLE_HEADER = '| Skill | 简介 | 适用场景 | 对应文件 |'
 const README_ROW_TEMPLATE = '| `{name}` | {description} | {scenario} | `skills/{name}/SKILL.md` |'
 const DEFAULT_SCENARIO = '维护或新增 skill 时做多端同步'
 const CLAUDE_ARGUMENT_BLOCK = '\n用户输入：\n$ARGUMENTS\n\n'
+const BUNDLED_RESOURCE_DIRS = ['references', 'assets', 'scripts']
+const TARGETS = [
+  {
+    key: 'claude',
+    rootSegments: ['.claude', 'commands'],
+    entryRelativePath: (skillName) => `${skillName}.md`,
+    resourceBaseDir: (skillName) => skillName,
+    kind: 'claude',
+    rewriteResourcePaths: true,
+    legacyEntryRelativePaths: () => [],
+  },
+  {
+    key: 'github',
+    rootSegments: ['.github', 'skills'],
+    entryRelativePath: (skillName) => path.join(skillName, 'SKILL.md'),
+    resourceBaseDir: (skillName) => skillName,
+    kind: 'generic',
+    rewriteResourcePaths: false,
+    legacyEntryRelativePaths: (skillName) => [`${skillName}.md`],
+  },
+  {
+    key: 'trae-skills',
+    rootSegments: ['.trae', 'skills'],
+    entryRelativePath: (skillName) => `${skillName}.md`,
+    resourceBaseDir: (skillName) => skillName,
+    kind: 'generic',
+    rewriteResourcePaths: true,
+    legacyEntryRelativePaths: () => [],
+  },
+  {
+    key: 'trae-rules',
+    rootSegments: ['.trae', 'rules'],
+    entryRelativePath: (skillName) => `${skillName}.md`,
+    resourceBaseDir: (skillName) => skillName,
+    kind: 'generic',
+    rewriteResourcePaths: true,
+    legacyEntryRelativePaths: () => [],
+  },
+]
 const MISSING_SOURCE_TEMPLATE = '错误：skills/{name}/SKILL.md 不存在，无法生成手动安装版本。'
 const SELF_REFERENCE_ERROR = '错误：xzskill 不支持生成自身的手动安装版本，请改为处理其他 skill。'
 const USAGE_ERROR = '错误：请只传入一个 skill 名称，例如：xzskill review-sslb'
@@ -27,6 +66,7 @@ function main() {
   }
 
   const repoRoot = path.resolve(__dirname, '..')
+  const sourceDir = path.join(repoRoot, 'skills', skillName)
   const sourcePath = path.join(repoRoot, 'skills', skillName, 'SKILL.md')
   const readmePath = path.join(repoRoot, 'README.md')
   const existingClaudePath = path.join(repoRoot, '.claude', 'commands', `${skillName}.md`)
@@ -39,41 +79,63 @@ function main() {
   const { frontmatter: sourceFrontmatter, body: sourceBody } = splitFrontmatter(sourceText)
   const sourceName = getFrontmatterValue(sourceFrontmatter, 'name') || skillName
   const description = getFrontmatterValue(sourceFrontmatter, 'description') || ''
-  const scenario = getFrontmatterValue(sourceFrontmatter, 'scenario') || DEFAULT_SCENARIO
+  const sourceScenario = getFrontmatterValue(sourceFrontmatter, 'scenario')
+  const bundledResourceDirs = getBundledResourceDirs(sourceDir)
 
   const existingClaudeText = fs.existsSync(existingClaudePath) ? readNormalized(existingClaudePath) : null
   const existingClaude = existingClaudeText ? splitClaudeWrapper(existingClaudeText) : null
 
-  const claudeText = buildClaudeTarget({
-    name: sourceName,
-    description,
-    body: sourceBody,
-    existingClaude,
-  })
-  const genericText = buildGenericTarget({
-    name: sourceName,
-    description,
-    body: sourceBody,
-  })
+  const outputs = new Map()
+  const resourceOutputs = []
 
-  const outputs = new Map([
-    [path.join(repoRoot, '.claude', 'commands', `${skillName}.md`), claudeText],
-    [path.join(repoRoot, '.github', 'skills', `${skillName}.md`), genericText],
-    [path.join(repoRoot, '.trae', 'skills', `${skillName}.md`), genericText],
-    [path.join(repoRoot, '.trae', 'rules', `${skillName}.md`), genericText],
-  ])
+  for (const target of TARGETS) {
+    const targetRoot = path.join(repoRoot, ...target.rootSegments)
+    const entryRelativePath = target.entryRelativePath(skillName)
+    const entryPath = path.join(targetRoot, entryRelativePath)
+    const targetBody = target.rewriteResourcePaths
+      ? rewriteBundledResourcePaths(sourceBody, `${skillName}/`, bundledResourceDirs)
+      : sourceBody
 
-  for (const [filePath, content] of outputs) {
-    fs.mkdirSync(path.dirname(filePath), { recursive: true })
-    writeFile(filePath, content)
+    const content =
+      target.kind === 'claude'
+        ? buildClaudeTarget({
+            name: sourceName,
+            description,
+            body: targetBody,
+            existingClaude,
+          })
+        : buildGenericTarget({
+            name: sourceName,
+            description,
+            body: targetBody,
+          })
+
+    removeLegacyEntries(targetRoot, skillName, target.legacyEntryRelativePaths(skillName))
+    fs.mkdirSync(path.dirname(entryPath), { recursive: true })
+    writeFile(entryPath, content)
+    outputs.set(entryPath, content)
+
+    resourceOutputs.push(
+      ...syncBundledResourcesForTarget({
+        repoRoot,
+        sourceDir,
+        skillName,
+        bundledResourceDirs,
+        targetRoot,
+        targetSkillDir: path.join(targetRoot, target.resourceBaseDir(skillName)),
+      })
+    )
   }
 
-  const readmeStatus = syncReadme(readmePath, skillName, description, scenario)
+  const readmeStatus = syncReadme(readmePath, skillName, description, sourceScenario)
 
   console.log(`源文件：skills/${skillName}/SKILL.md`)
   console.log('已更新：')
   for (const filePath of outputs.keys()) {
     console.log(`- ${path.relative(repoRoot, filePath)}`)
+  }
+  for (const resourcePath of resourceOutputs) {
+    console.log(`- ${resourcePath}`)
   }
   console.log(`- README：${readmeStatus}`)
   console.log('已按最小必要范围完成同步。')
@@ -203,6 +265,31 @@ function normalizeContentBody(text) {
     .replace(/\s+$/, '')
 }
 
+function getBundledResourceDirs(sourceDir) {
+  return BUNDLED_RESOURCE_DIRS.filter((dirName) => {
+    const fullPath = path.join(sourceDir, dirName)
+    return fs.existsSync(fullPath) && fs.statSync(fullPath).isDirectory()
+  })
+}
+
+function rewriteBundledResourcePaths(text, resourcePrefix, bundledResourceDirs) {
+  let result = text
+
+  for (const dirName of bundledResourceDirs) {
+    result = rewriteBundledResourcePathPrefix(result, resourcePrefix, dirName)
+  }
+
+  return result
+}
+
+function rewriteBundledResourcePathPrefix(text, resourcePrefix, dirName) {
+  const boundary = '(^|[\\s`"\'(\\[])'
+
+  return text
+    .replace(new RegExp(`${boundary}\\./${dirName}/`, 'g'), `$1${resourcePrefix}${dirName}/`)
+    .replace(new RegExp(`${boundary}${dirName}/`, 'g'), `$1${resourcePrefix}${dirName}/`)
+}
+
 function buildClaudeTarget({ name, description, body, existingClaude }) {
   const lines = ['---']
 
@@ -249,6 +336,47 @@ function buildGenericTarget({ name, description, body }) {
   return ensureTrailingNewline(content)
 }
 
+function syncBundledResourcesForTarget({ repoRoot, sourceDir, skillName, bundledResourceDirs, targetRoot, targetSkillDir }) {
+  const written = []
+
+  for (const dirName of BUNDLED_RESOURCE_DIRS) {
+    removeManagedDir(path.join(targetSkillDir, dirName))
+  }
+
+  for (const dirName of bundledResourceDirs) {
+    const sourceResourceDir = path.join(sourceDir, dirName)
+    const targetResourceDir = path.join(targetSkillDir, dirName)
+    fs.mkdirSync(path.dirname(targetResourceDir), { recursive: true })
+    fs.cpSync(sourceResourceDir, targetResourceDir, { recursive: true })
+    written.push(path.relative(repoRoot, targetResourceDir))
+  }
+
+  if (fs.existsSync(targetSkillDir) && fs.readdirSync(targetSkillDir).length === 0) {
+    fs.rmdirSync(targetSkillDir)
+  }
+
+  return written
+}
+
+function removeLegacyEntries(targetRoot, skillName, legacyEntryRelativePaths) {
+  for (const relativePath of legacyEntryRelativePaths) {
+    if (!relativePath) {
+      continue
+    }
+
+    const absolutePath = path.join(targetRoot, relativePath)
+    if (fs.existsSync(absolutePath)) {
+      fs.rmSync(absolutePath, { recursive: true, force: true })
+    }
+  }
+}
+
+function removeManagedDir(dirPath) {
+  if (fs.existsSync(dirPath)) {
+    fs.rmSync(dirPath, { recursive: true, force: true })
+  }
+}
+
 function syncReadme(readmePath, skillName, description, scenario) {
   const text = readNormalized(readmePath)
   const lines = text.split('\n')
@@ -257,14 +385,15 @@ function syncReadme(readmePath, skillName, description, scenario) {
     return '未更新（未找到 Skills 表头）'
   }
 
-  const row = README_ROW_TEMPLATE
-    .replaceAll('{name}', skillName)
-    .replace('{description}', description)
-    .replace('{scenario}', scenario)
-
   const skillPathToken = `\`skills/${skillName}/SKILL.md\``
   const existingRowIndex = lines.findIndex((line, index) => index > headerIndex && line.includes(skillPathToken))
   if (existingRowIndex !== -1) {
+    const existingRow = parseReadmeRow(lines[existingRowIndex])
+    const row = buildReadmeRow({
+      skillName,
+      description: description || existingRow?.description || '',
+      scenario: scenario || existingRow?.scenario || DEFAULT_SCENARIO,
+    })
     if (lines[existingRowIndex] === row) {
       return '已存在'
     }
@@ -272,6 +401,12 @@ function syncReadme(readmePath, skillName, description, scenario) {
     writeFile(readmePath, lines.join('\n'))
     return '已更新'
   }
+
+  const row = buildReadmeRow({
+    skillName,
+    description,
+    scenario: scenario || DEFAULT_SCENARIO,
+  })
 
   let insertAt = headerIndex + 2
   while (insertAt < lines.length && lines[insertAt].startsWith('|')) {
@@ -281,6 +416,27 @@ function syncReadme(readmePath, skillName, description, scenario) {
   lines.splice(insertAt, 0, row)
   writeFile(readmePath, lines.join('\n'))
   return '已追加'
+}
+
+function buildReadmeRow({ skillName, description, scenario }) {
+  return README_ROW_TEMPLATE
+    .replaceAll('{name}', skillName)
+    .replace('{description}', description)
+    .replace('{scenario}', scenario)
+}
+
+function parseReadmeRow(line) {
+  const cells = line.split('|').map((cell) => cell.trim())
+  if (cells.length < 5) {
+    return null
+  }
+
+  return {
+    name: cells[1] || '',
+    description: cells[2] || '',
+    scenario: cells[3] || '',
+    path: cells[4] || '',
+  }
 }
 
 function ensureTrailingNewline(text) {

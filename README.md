@@ -33,9 +33,9 @@
 | Skill | 简介 | 适用场景 | 对应文件 |
 | --- | --- | --- | --- |
 | `xzskill` | 基于标准 `skills` 目录生成手动安装版本并同步 README | 维护或新增 skill 时做多端同步（现由本地 Node 脚本执行） | `skills/xzskill/SKILL.md` |
-| `ribao` | 根据工作内容、总结或 git 变更生成成果描述 | 写日报、commit message、PR message | `skills/ribao/SKILL.md` |
+| `ribao` | 根据当天工作内容、总结或 git 变更，生成一份可复用的结构化成果描述；可直接用于日报、git commit message 或 git PR message | 写日报、commit message、PR message | `skills/ribao/SKILL.md` |
 | `feature-plan` | 在功能设计与问题诊断阶段分析需求并形成可执行方案，分别输出面向用户与面向 AI 的行动文档 | 功能设计、需求澄清、方案规划与 bug 诊断 | `skills/feature-plan/SKILL.md` |
-| `review-sslb` | 三省六部式代码审查，分阶段输出结构化结论 | 需要更正式、更有层次地做代码 review | `skills/review-sslb/SKILL.md` |
+| `review-sslb` | 使用三省六部式代码审查，按中书省、尚书省、六部、门下省、锦衣卫五阶段输出结构化审查结论 | 需要更正式、更有层次地做代码 review | `skills/review-sslb/SKILL.md` |
 | `review-hgsc` | 后宫分位式代码审查，用角色分工输出审查意见 | 想让代码 review 更有风格，但仍保持专业判断 | `skills/review-hgsc/SKILL.md` |
 | `review-gal` | gal 路线分支式代码审查，用路线分歧与 true end 输出结构化结论 | 需要比较实现路线、收束方案分歧时的 review | `skills/review-gal/SKILL.md` |
 | `review-band` | 少女乐队分工式代码审查，用成员分轨点评输出结构化结论 | 想做更有角色感、但仍专业可执行的 PR review | `skills/review-band/SKILL.md` |
@@ -74,6 +74,10 @@ npx skills add https://github.com/orziz/AISkills
 
 - `.claude/commands/review-sslb.md`
 
+若该 skill 还带有同名资源目录，也需要一并复制，例如：
+
+- `.claude/commands/harness-sslb/`
+
 之后在输入框中使用对应命令触发，例如：
 
 - `/review-sslb`
@@ -85,15 +89,26 @@ npx skills add https://github.com/orziz/AISkills
 
 #### Copilot
 
-将 `.github/skills` 中对应内容按需复制到：
+将对应 skill 的整个目录放入项目的 `.github/skills/` 下，例如：
 
-- `.github/copilot-instructions.md`
+- `.github/skills/harness-sslb/SKILL.md`
 
-> Copilot 会自行读取 `.github/copilot-instructions.md`，一般不需要额外配置。
+补充说明：
+
+- Copilot 的手动安装版本按“一个 skill 一个目录”组织
+- 若 skill 带有 `references/`、`assets/`、`scripts/` 等附属目录，必须连同整个目录一起复制
+- 只有保留目录结构，`SKILL.md` 中的相对路径才能继续可用
+
+> `copilot-instructions.md` 更适合项目级全局说明，不适合作为多文件 skill 的承载位置。
 
 #### Trae
 
 放入同名目录即可，`rules` 和 `skills` 二选一。
+
+若该 skill 还带有同名资源目录，也需要一并复制，例如：
+
+- `.trae/skills/harness-sslb/`
+- `.trae/rules/harness-sslb/`
 
 ##### `rules`
 
