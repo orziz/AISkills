@@ -40,7 +40,7 @@
 | `review-gal` | gal 路线分支式代码审查，用路线分歧与 true end 输出结构化结论 | 需要比较实现路线、收束方案分歧时的 review | `skills/review-gal/SKILL.md` |
 | `review-band` | 少女乐队分工式代码审查，用成员分轨点评输出结构化结论 | 想做更有角色感、但仍专业可执行的 PR review | `skills/review-band/SKILL.md` |
 | `review-anime` | anime 多角色连续对话式代码审查，用强角色互动输出带自然技术锚点的审查意见 | 想要更放飞、更有演出感，但又不想看模板化结论的 code review | `skills/review-anime/SKILL.md` |
-| `harness-sslb` | 将 feature-plan 的需求收敛、review-sslb 的结构化复核与推进裁决串成单次工作流，先起草、再过堂、后定案 | 需求不清但要尽快推进、方案评审、复杂任务实施前复核、问题诊断收口 | `skills/harness-sslb/SKILL.md` |
+| `harness-sslb` | 把需求收敛、结构化复核、执行裁决与续跑收口串成自动推进的完整工作流 harness | 模糊需求、方案评审、复杂任务推进、问题诊断与持续收口 | `skills/harness-sslb/SKILL.md` |
 
 - `harness-sslb` 是独立 skill，可单独安装使用；内部借用 `feature-plan` 与 `review-sslb` 的方法论，但不要求同时安装它们。
 
