@@ -52,7 +52,7 @@ const TARGETS = [
   },
 ]
 const MISSING_SOURCE_TEMPLATE = '错误：skills/{name}/SKILL.md 不存在，无法生成手动安装版本。'
-const USAGE_ERROR = '错误：请至少传入一个 skill 名称，例如：skill-sync review-sslb harness-sslb'
+const USAGE_ERROR = '错误：请至少传入一个 skill 名称，例如：skill-sync review-sslb harness-dev'
 
 function main() {
   const skillNames = parseSkillNames(process.argv.slice(2))

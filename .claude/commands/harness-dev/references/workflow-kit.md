@@ -156,7 +156,7 @@ harness 默认权限高于单段规划 skill。可直接进行：
 
 适用：
 
-- 当前主要矛盾是页面、流程、状态、交互或验收口径不稳
+- 当前主要矛盾是页面、流程、状态、交互、视觉、UI/UX 或验收口径不稳
 - 直接进入实现会导致返工
 - 用户真正要的是设计说明，而不是马上改代码
 
@@ -179,7 +179,7 @@ harness 默认权限高于单段规划 skill。可直接进行：
 - 完整保留中书省 → 尚书省 → 六部 → 门下省 → 锦衣卫顺序
 - 保留疑似未使用文件筛查
 - 保留两张评定表
-- 若环境支持真实调用，且用户明确提到 `sslb` / `r-sslb` / `review-sslb`，或语义上明显在要“正式三省六部审查 / 完整过堂 / 严格审查”那套能力，优先真实借力 `review-sslb`
+- 若环境支持真实调用，且用户明确提到 `sslb` / `r-sslb` / `review-sslb`，或语义上明显在要“正式三省六部审查 / 完整过堂 / 严格审查”那套能力，优先真实借力 `review-sslb`；若未安装，则按 `review-hgsc -> review-anime -> review-band -> review-gal` 顺序回退，并显式说明实际借力对象
 
 ### 实现落地接棒
 
@@ -198,17 +198,23 @@ harness 默认权限高于单段规划 skill。可直接进行：
 ## 真实借力优先级
 
 - 用户未必会说 skill 全名；简称、缩写、口语指代、方法特征描述，都要主动做语义匹配
+- 用户口中的 `hd`、`hs`、`harness-dev`、`harness-sslb`、`dev harness`、`开发 harness 那个`、`开发总控那个`，默认优先匹配 `harness-dev`
 - 用户口中的 `pg`、`project guide`、`项目基线那个`、`整理 README / 规则那个`，默认优先匹配 `project-guide`
 - 用户口中的 `fp`、`feature plan`、`规划那个`、`出用户文档和 AI 执行单那个`，默认优先匹配 `feature-plan`
-- 用户口中的 `ds`、`design spec`、`设计说明那个`、`整理页面和交互那个`，默认优先匹配 `design-spec`
+- 用户口中的 `ds`、`design spec`、`设计说明那个`、`整理页面和交互那个`、`视觉统一那个`、`UI/UX 那个`，默认优先匹配 `design-spec`
 - 用户口中的 `sslb`、`r-sslb`、`三省六部那个`、`正式过堂那个`、`审查那套`，默认优先匹配 `review-sslb`
+- 用户口中的 `hgsc`、`r-hgsc`、`后宫那个`、`分位那个`，默认优先匹配 `review-hgsc`
+- 用户口中的 `anime`、`r-anime`、`anime 那个`、`放飞那个`、`演出拉满那个`，默认优先匹配 `review-anime`
+- 用户口中的 `band`、`r-band`、`乐队那个`、`少女乐队那个`，默认优先匹配 `review-band`
+- 用户口中的 `gal`、`r-gal`、`gal 那个`、`true end 那个`，默认优先匹配 `review-gal`
 - 用户口中的 `ic`、`implement code`、`直接实现那个`、`直接改代码那个`，默认优先匹配 `implement-code`
 - 场景明显命中项目级基线补齐、README / 规则整理、AI 接手基线时，优先真实借力 `project-guide`
 - 场景明显命中完整规划文档 / AI 执行单时，优先真实借力 `feature-plan`
-- 场景明显命中页面、流程、状态、交互或设计说明缺口时，优先真实借力 `design-spec`
-- 场景明显命中正式审查 / diff 审查 / 完整三省六部时，优先真实借力 `review-sslb`
+- 场景明显命中页面、流程、状态、交互、视觉、UI/UX 或设计说明缺口时，优先真实借力 `design-spec`
+- 场景明显命中正式审查 / diff 审查 / 完整三省六部时，优先真实借力 review 家族 skill；未指定风格时默认按 `review-sslb -> review-hgsc -> review-anime -> review-band -> review-gal` 顺序找可用者
 - 场景明显命中实现落地与代码收口时，优先真实借力 `implement-code`
 - 只有环境不支持真实调用、调用会打断续跑，或问题规模明显不值得切换时，才退回 harness 内部模拟
+- 若用户明确点名某个 `review-*` skill，则先找该 skill；仅在缺失或不可用时才按默认回退顺序找下一个可用者，并写明实际回退结果
 - 若语义上可能命中多个候选，但结合任务阶段、产物类型和用户意图仍能判断，就直接选最合适者；只有仍有真实歧义时再追问 1 个问题
 
 ## 默认产物包

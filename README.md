@@ -51,9 +51,9 @@
 
 | Skill | 简介 | 适用场景 | 对应文件 |
 | --- | --- | --- | --- |
-| `harness-sslb` | 把需求收敛、结构化复核、执行裁决与续跑收口串成自动推进的完整工作流 harness | 模糊需求、方案评审、复杂任务推进、问题诊断与持续收口 | `skills/harness-sslb/SKILL.md` |
+| `harness-dev` | 把开发相关需求收敛、结构化复核、执行裁决与续跑收口串成自动推进的完整 workflow harness | 开发需求、方案评审、复杂实现推进、代码问题诊断与持续收口 | `skills/harness-dev/SKILL.md` |
 | `feature-plan` | 在功能设计与问题诊断阶段分析需求并形成可执行方案，分别输出面向用户与面向 AI 的行动文档 | 功能设计、需求澄清、方案规划与 bug 诊断 | `skills/feature-plan/SKILL.md` |
-| `design-spec` | 把需求、页面或流程收敛成可落地的产品、交互与界面设计说明 | 页面设计、交互设计、信息架构、状态设计、设计说明文档整理 | `skills/design-spec/SKILL.md` |
+| `design-spec` | 把需求、页面、模块、流程、视觉与体验想法收敛成可落地的产品、交互、界面与视觉设计说明 | 页面设计、模块设计、交互设计、视觉设计、UI/UX 优化、信息架构、状态设计、设计说明文档整理 | `skills/design-spec/SKILL.md` |
 | `implement-code` | 在边界明确时直接落地代码、测试与必要文档，并以最少打断完成实现和收口 | 新功能实现、bug 修复、重构落地、补测试、按既有方案编码 | `skills/implement-code/SKILL.md` |
 | `project-guide` | 归纳整个项目的目标、结构、约束、命名与协作规则，形成可复用的项目级说明文档 | 新项目接手、项目规范整理、README/规则文档收敛、AI 上下文基线整理 | `skills/project-guide/SKILL.md` |
 | `ribao` | 根据当天工作内容、总结或 git 变更，生成一份可复用的结构化成果描述；可直接用于日报、git commit message 或 git PR message | 写日报、commit message、PR message | `skills/ribao/SKILL.md` |
@@ -72,7 +72,7 @@
 
 补充说明：
 
-- `harness-sslb` 是独立 skill，可单独安装使用；内部会按需借力 `project-guide`、`feature-plan`、`design-spec`、`review-sslb`、`implement-code`，但不要求同时安装它们。
+- `harness-dev` 是独立 skill，可单独安装使用；内部会按需借力 `project-guide`、`feature-plan`、`design-spec`、`review-sslb`、`implement-code`，但不要求同时安装它们。
 - 审查类 skill 的区别主要在输出风格、结构与角色感，不在“能不能做代码审查”本身。
 
 ### 仓库维护工具
@@ -100,15 +100,15 @@
 
 如果你不知道先用哪个 skill，可以直接按下面选：
 
-- 不知道该先规划、审查还是直接推进：`harness-sslb`
+- 不知道该先规划、审查还是直接推进：`harness-dev`
 - 只想把需求、方案或 bug 先收敛成文档：`feature-plan`
-- 想把页面、流程、状态或交互整理成设计说明：`design-spec`
+- 想把页面、流程、状态、交互、视觉或 UI/UX 想法整理成设计说明：`design-spec`
 - 边界已经比较明确，想直接落地代码和测试：`implement-code`
 - 想正式做一次结构化代码审查：`review-sslb`
 - 想整理整个项目的 README、规则或 AI 接手基线：`project-guide`
 - 想把当天工作整理成日报、commit message 或 PR message：`ribao`
 
-如果你完全不想自己判断阶段，默认先用 `harness-sslb` 就行。
+如果你完全不想自己判断阶段，默认先用 `harness-dev` 就行。
 
 ---
 
@@ -116,9 +116,9 @@
 
 普通使用者更常见的路径通常是：
 
-1. 任务还模糊时，用 `harness-sslb` 接住整段任务
+1. 任务还模糊时，用 `harness-dev` 接住整段任务
 2. 若当前只需要需求、方案或 bug 收敛，可直接用 `feature-plan`
-3. 若当前要把页面、流程和状态整理成设计说明，可直接用 `design-spec`
+3. 若当前要把页面、流程、状态、交互、视觉或体验设计整理成说明，可直接用 `design-spec`
 4. 若边界已经明确、准备直接改代码，可直接用 `implement-code`
 5. 若已经进入正式审查阶段，可切到 `review-sslb` 或其他审查系列 skill
 6. 若当前主要是在整理整个项目的 README、规范或 AI 基线，可直接用 `project-guide`
@@ -164,7 +164,7 @@ npx skills add https://github.com/orziz/AISkills
 
 若该 skill 还带有同名资源目录，也需要一并复制，例如：
 
-- `.claude/commands/harness-sslb/`
+- `.claude/commands/harness-dev/`
 
 之后在输入框中使用对应命令触发，例如：
 
@@ -179,7 +179,7 @@ npx skills add https://github.com/orziz/AISkills
 
 将对应 skill 的整个目录放入项目的 `.github/skills/` 下，例如：
 
-- `.github/skills/harness-sslb/SKILL.md`
+- `.github/skills/harness-dev/SKILL.md`
 
 补充说明：
 
@@ -195,8 +195,8 @@ npx skills add https://github.com/orziz/AISkills
 
 若该 skill 还带有同名资源目录，也需要一并复制，例如：
 
-- `.trae/skills/harness-sslb/`
-- `.trae/rules/harness-sslb/`
+- `.trae/skills/harness-dev/`
+- `.trae/rules/harness-dev/`
 
 `rules`：
 
@@ -210,9 +210,9 @@ npx skills add https://github.com/orziz/AISkills
 
 ---
 
-## `harness-sslb` 怎么用更顺
+## `harness-dev` 怎么用更顺
 
-`harness-sslb` 更适合“接住一整段任务并持续推进”，而不是只做一次性问答。
+`harness-dev` 更适合“接住一整段任务并持续推进”，而不是只做一次性问答。
 它不会默认把所有 skill 都串一遍；而是按任务需要，选择性借力 `project-guide`、`feature-plan`、`design-spec`、`review-sslb`、`implement-code`。
 
 推荐在首轮输入里尽量带上这三类信息：
@@ -223,15 +223,15 @@ npx skills add https://github.com/orziz/AISkills
 
 推荐触发方式：
 
-- “用 `harness-sslb` 接这个需求：先帮我收敛范围，形成可执行草案；如果路线清楚就直接推进，最后告诉我当前状态和下一步。”
-- “用 `harness-sslb` 接这个报错：先判断是信息不足还是可以直接诊断；如果能落地修复就继续做，不要只停在分析。”
-- “用 `harness-sslb` 继续上次那个任务：先恢复上下文和当前裁决，再按已有路线往下推进并收口。”
-- “用 `harness-sslb` 接这个 PR / 分支：先做结构化复核，定案后把该改的地方直接改掉，最后给我明确结论。”
+- “用 `harness-dev` 接这个需求：先帮我收敛范围，形成可执行草案；如果路线清楚就直接推进，最后告诉我当前状态和下一步。”
+- “用 `harness-dev` 接这个报错：先判断是信息不足还是可以直接诊断；如果能落地修复就继续做，不要只停在分析。”
+- “用 `harness-dev` 继续上次那个任务：先恢复上下文和当前裁决，再按已有路线往下推进并收口。”
+- “用 `harness-dev` 接这个 PR / 分支：先做结构化复核，定案后把该改的地方直接改掉，最后给我明确结论。”
 
 什么时候直接用别的 skill 会更合适：
 
 - 你只想要一份完整规划文档、用户文档或 AI 执行单时，直接用 `feature-plan`
-- 你主要在整理页面、交互、状态或设计说明时，直接用 `design-spec`
+- 你主要在整理页面、交互、状态、视觉、UI/UX 或设计说明时，直接用 `design-spec`
 - 你已经明确边界并准备直接编码时，直接用 `implement-code`
 - 你只想做一次正式、严格、偏审查结论的审查时，直接用 `review-sslb`
 - 你主要在整理项目 README、规则文档或 AI 接手基线时，直接用 `project-guide`
@@ -239,7 +239,7 @@ npx skills add https://github.com/orziz/AISkills
 
 补充理解：
 
-- `harness-sslb` 可以按需先补 `project-guide`，尤其是接手陌生项目、项目级规则缺失，且这些缺口已经影响后续推进时
+- `harness-dev` 可以按需先补 `project-guide`，尤其是接手陌生项目、项目级规则缺失，且这些缺口已经影响后续推进时
 - 但小范围局部改动、纯后端修补、明确的小实现，不应该为了流程完整硬先做 `project-guide` 或 `design-spec`
 
 ---

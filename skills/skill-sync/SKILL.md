@@ -18,7 +18,7 @@ scenario: skill 定稿后的多端同步、README 回写与安装版本更新
 
 ## 输入约束
 
-1. 接受 **一个或多个** skill 名称，例如：`review-sslb harness-sslb`。
+1. 接受 **一个或多个** skill 名称，例如：`review-sslb harness-dev`。
 2. 如果未传名称，或任一名称无法明确解析为 skill 名称，提示用户重新输入。
 3. 只认 `工程根目录/skills/<skill-name>/` 目录，不从 `.agents` 目录取安装来源。
 4. 不考虑依赖关系，不引入其他 skill 名称。
