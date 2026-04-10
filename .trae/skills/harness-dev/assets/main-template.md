@@ -2,6 +2,8 @@
 
 - 当前阶段：
 - 当前状态：
+- 当前深度：default / escalated
+- 首轮策略：one-shot-first / lightweight
 - 主文件：
 - 执行单：
 - 借力记录：
@@ -12,11 +14,14 @@
 
 # 模式与委派记录
 
-- 当前模式：workflow / fp-strict / strict-sslb
+- 当前模式：workflow / fp-strict / ds-strict / strict-sslb
 - 是否借力外部 skill：
 - 借力对象：
 - 借力原因：
+- 借力方式：none / real / proxy / internal-fallback
+- 子 agent 记录：
 - 若未真实借力，原因：
+- 升档原因：
 
 # 背景与目标
 
