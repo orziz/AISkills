@@ -1,11 +1,11 @@
 # AISkills
 
-一个偏中文语境、偏实战使用的 AI 编程 skill 与 workflow 仓库。
+一个偏中文语境、偏实战使用的 AI 编程 skill 与工作流仓库。
 
 它主要做四类事：
 
 - 把常用 prompt 沉淀成可复用、可安装的 skill
-- 把需求收敛、设计说明、审查、实现推进做成更完整的 workflow
+- 把需求整理清楚、设计说明、审查、实现推进做成更完整的工作流
 - 统一 Claude / Copilot / Trae 的手动安装与维护方式
 - 在保证可用性的前提下，保留一点风格化和表达感
 
@@ -33,7 +33,7 @@ npx skills add https://github.com/orziz/AISkills
 3. 首轮输入尽量带上三类信息：`目标`、`材料`、`约束`。
 4. 如果任务已经明确落在单一阶段，直接用对应 skill 会更省心：
 
-- 需求、方案或 bug 收敛：`feature-plan`
+- 需求、方案或 bug 规划：`feature-plan`
 - 页面、流程、状态、交互、视觉或 UI/UX 设计说明：`design-spec`
 - 边界明确，直接落地代码和测试：`implement-code`
 - 正式做一次结构化代码审查：`review-sslb`
@@ -48,7 +48,7 @@ npx skills add https://github.com/orziz/AISkills
 - 想把页面、交互、状态或设计说明整理成可交接文档
 - 想在已有方案或设计边界下，直接让 AI 落地代码、测试和必要文档
 - 想让代码审查输出更结构化一些
-- 想把“需求收敛 -> 审查 -> 推进”做成可以直接接手的工作流
+- 想把“需求整理清楚 -> 审查 -> 推进”做成可以直接接手的工作流
 - 想整理整个项目的 README、规则和 AI 接手基线
 - 想把 skill 源文件与多端安装版本分开维护
 - 想同时兼顾 Claude、Copilot、Trae 等不同入口
@@ -57,7 +57,7 @@ npx skills add https://github.com/orziz/AISkills
 
 这个仓库的核心思路很简单：
 
-- `skills/` 目录下维护标准源文件，优先把“真相源”收在这里
+- `skills/` 目录下维护标准源文件，内容以这里为准
 - 多端手动安装版本从标准源同步生成，尽量避免各端长期分叉
 - 能做成完整 workflow 的，不只停留在单段 prompt
 - 结构尽量清楚，安装尽量直接，日常维护尽量低成本
@@ -108,7 +108,6 @@ npx skills add https://github.com/orziz/AISkills
 
 补充说明：
 
-- 如果使用 `npx skills add`，Claude 读取的是标准源 skill：`skills/review-sslb/SKILL.md`
 - 如果路径正确但命令没有出现，可以尝试重启 Claude 终端或编辑器
 
 #### Copilot
@@ -147,7 +146,7 @@ npx skills add https://github.com/orziz/AISkills
 ## `harness-dev` 怎么用更顺
 
 `harness-dev` 更适合“接住一整段任务并持续推进”，而不是只做一次性问答。
-它不会默认把所有 skill 都串一遍，而是按任务需要，选择性借力 `project-guide`、`feature-plan`、`design-spec`、`review-sslb`、`implement-code`。
+它不会默认把所有 skill 都串一遍，而是按任务需要，选择性调用 `project-guide`、`feature-plan`、`design-spec`、`review-sslb`、`implement-code`。
 
 推荐在首轮输入里尽量带上这三类信息：
 
@@ -157,9 +156,9 @@ npx skills add https://github.com/orziz/AISkills
 
 推荐触发方式：
 
-- “用 `harness-dev` 接这个需求：先帮我收敛范围，形成可执行草案；如果路线清楚就直接推进，最后告诉我当前状态和下一步。”
+- “用 `harness-dev` 接这个需求：先帮我明确范围，形成可执行草案；如果路线清楚就直接推进，最后告诉我当前状态和下一步。”
 - “用 `harness-dev` 接这个报错：先判断是信息不足还是可以直接诊断；如果能落地修复就继续做，不要只停在分析。”
-- “用 `harness-dev` 继续上次那个任务：先恢复上下文和当前裁决，再按已有路线往下推进并收口。”
+- “用 `harness-dev` 继续上次那个任务：先恢复上下文和当前裁决，再按已有路线往下推进并做最后说明。”
 - “用 `harness-dev` 接这个 PR / 分支：先做结构化复核，定案后把该改的地方直接改掉，最后给我明确结论。”
 
 如果你的任务已经明确落在某个单一阶段，直接用上面的对应 skill 会更省心，不必为了流程完整强行先走 `harness-dev`。
@@ -182,11 +181,11 @@ npx skills add https://github.com/orziz/AISkills
 
 | Skill | 简介 | 适用场景 | 对应文件 |
 | --- | --- | --- | --- |
-| `harness-dev` | 把开发相关需求收敛、结构化复核、执行裁决与续跑收口串成自动推进的完整 workflow harness | 开发需求、方案评审、复杂实现推进、代码问题诊断与持续收口 | `skills/harness-dev/SKILL.md` |
+| `harness-dev` | 把开发相关需求整理清楚、结构化复核、执行裁决与结果总结串成自动推进的完整工作流 | 开发需求、方案评审、复杂实现推进、代码问题诊断与持续推进 | `skills/harness-dev/SKILL.md` |
 | `feature-plan` | 在功能设计与问题诊断阶段分析需求并形成可执行方案，分别输出面向用户与面向 AI 的行动文档 | 功能设计、需求澄清、方案规划与 bug 诊断 | `skills/feature-plan/SKILL.md` |
-| `design-spec` | 把需求、页面、模块、流程、视觉与体验想法收敛成可落地的产品、交互、界面与视觉设计说明 | 页面设计、模块设计、交互设计、视觉设计、UI/UX 优化、信息架构、状态设计、设计说明文档整理 | `skills/design-spec/SKILL.md` |
-| `implement-code` | 在边界明确时直接落地代码、测试与必要文档，并以最少打断完成实现和收口 | 新功能实现、bug 修复、重构落地、补测试、按既有方案编码 | `skills/implement-code/SKILL.md` |
-| `project-guide` | 归纳整个项目的目标、结构、约束、命名与协作规则，形成可复用的项目级说明文档 | 新项目接手、项目规范整理、README/规则文档收敛、AI 上下文基线整理 | `skills/project-guide/SKILL.md` |
+| `design-spec` | 把需求、页面、模块、流程、视觉与体验想法整理成可落地的产品、交互、界面与视觉设计说明 | 页面设计、模块设计、交互设计、视觉设计、UI/UX 优化、信息架构、状态设计、设计说明文档整理 | `skills/design-spec/SKILL.md` |
+| `implement-code` | 在边界明确时直接落地代码、测试与必要文档，并以最少打断完成实现和结果总结 | 新功能实现、bug 修复、重构落地、补测试、按既有方案编码 | `skills/implement-code/SKILL.md` |
+| `project-guide` | 归纳整个项目的目标、结构、约束、命名与协作规则，形成可复用的项目级说明文档 | 新项目接手、项目规范整理、README/规则文档整理、AI 上下文基线整理 | `skills/project-guide/SKILL.md` |
 | `ribao` | 根据当天工作内容、总结或 git 变更，生成一份可复用的结构化成果描述；可直接用于日报、git commit message 或 git PR message | 写日报、commit message、PR message | `skills/ribao/SKILL.md` |
 
 ### 审查类 skill
@@ -197,13 +196,13 @@ npx skills add https://github.com/orziz/AISkills
 | --- | --- | --- | --- |
 | `review-sslb` | 使用三省六部式代码审查，按中书省、尚书省、六部、门下省、锦衣卫五阶段输出结构化审查结论 | 需要更正式、更有层次地做代码审查 | `skills/review-sslb/SKILL.md` |
 | `review-hgsc` | 使用后宫分位式代码审查，按皇后、四妃、九嫔分工输出结构化审查结论 | 想让代码审查更有风格，但仍保持专业判断 | `skills/review-hgsc/SKILL.md` |
-| `review-gal` | gal 路线分支式代码审查，用路线分歧与 true end 输出结构化结论 | 需要比较实现路线、收束方案分歧时的代码审查 | `skills/review-gal/SKILL.md` |
-| `review-band` | 少女乐队分工式代码审查，用成员分轨点评输出结构化结论 | 想做更有角色感、但仍专业可执行的 PR 审查 | `skills/review-band/SKILL.md` |
-| `review-anime` | anime 多角色连续对话式代码审查，用强角色互动输出带自然技术锚点的审查意见 | 想要更放飞、更有演出感，但又不想看模板化结论的代码审查 | `skills/review-anime/SKILL.md` |
+| `review-gal` | 使用 gal 多角色对话式代码审查，按青梅、学姐、后辈、傲娇与 true end 总结输出结构化结论 | 需要比较实现路线、收束方案分歧时的代码审查 | `skills/review-gal/SKILL.md` |
+| `review-band` | 使用少女乐队分工式代码审查，按主唱、吉他、贝斯、鼓手、制作人分段输出结构化结论 | 想做更有角色感、但仍专业可执行的 PR 审查 | `skills/review-band/SKILL.md` |
+| `review-anime` | 使用 anime 多角色连续对话式代码审查，以强角色互动输出带自然技术锚点的审查意见 | 想要更放飞、更有演出感，但又不想看模板化结论的代码审查 | `skills/review-anime/SKILL.md` |
 
 补充说明：
 
-- `harness-dev` 是独立 skill，可单独安装使用；内部会按需借力 `project-guide`、`feature-plan`、`design-spec`、`review-sslb`、`implement-code`，但不要求同时安装它们
+- `harness-dev` 是独立 skill，可单独安装使用；如果环境中已安装 `project-guide`、`feature-plan`、`design-spec`、`review-sslb`、`implement-code`，它会按情况调用这些 skill，但不要求同时安装
 - 审查类 skill 的区别主要在输出风格、结构与角色感，不在“能不能做代码审查”本身
 
 ## 面向维护者
@@ -214,9 +213,9 @@ npx skills add https://github.com/orziz/AISkills
 
 当前仓库默认按“对象 / 层级 + 工作类型”来命名：
 
-- `feature-*`：需求收敛、方案规划、问题诊断
+- `feature-*`：需求规划、方案规划、问题诊断
 - `design-*`：设计说明、交互、页面、流程、状态
-- `implement-*`：代码实现、测试补齐、落地收口
+- `implement-*`：代码实现、测试补齐、落地总结
 - `project-*`：项目级说明、规则、基线、README 整理
 - `review-*`：代码审查
 - `skill-*`：仓库维护与 skill 工具链
@@ -231,7 +230,7 @@ npx skills add https://github.com/orziz/AISkills
 
 | Skill | 简介 | 适用场景 | 对应文件 |
 | --- | --- | --- | --- |
-| `skill-author` | 把用户已经想好的 skill 收敛成仓库内标准源文件，并按需补齐骨架 | 新增 skill、改写现有 skill、沉淀 prompt 或 workflow 为标准 skill 源文件 | `skills/skill-author/SKILL.md` |
+| `skill-author` | 把用户已经想好的 skill 整理成仓库内标准源文件，并按需补齐骨架 | 新增 skill、改写现有 skill、沉淀 prompt 或 workflow 为标准 skill 源文件 | `skills/skill-author/SKILL.md` |
 | `skill-sync` | 基于标准源 skill 生成各端安装版本，并对 README 做最小范围回写 | skill 定稿后的多端同步、README 回写与安装版本更新 | `skills/skill-sync/SKILL.md` |
 
 推荐顺序：
