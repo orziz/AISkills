@@ -1,199 +1,151 @@
 # AISkills
 
-一个偏中文语境、偏实战使用的 AI 编程 skill 与工作流仓库。
+一个把规划、设计、审查、实现、总结与仓库维护收束成单一入口 skill 的仓库。
 
-它主要做四类事：
-
-- 把常用 prompt 沉淀成可复用、可安装的 skill
-- 把需求整理清楚、设计说明、审查、实现推进做成更完整的工作流
-- 统一 Claude / Copilot / Trae 的手动安装与维护方式
-- 在保证可用性的前提下，保留一点风格化和表达感
-
-如果你只记默认入口：路线大致有了，想让 AI 接住任务并持续推进，用 `harness-dev`；方向、边界、主路、先手，甚至该不该现在动手都还没定，用 `harness-dao`。
-
-这两者是两套不同的 workflow，默认按当前安装或当前明确调用的那一套独立工作，不混跑、不串成前后接力。
+这个仓库对外只有一个安装入口：`odai`。什么时候该走哪个模块、做到什么产物形态，都先由 `dao` 根据用户语义、目标、约束和想法来判断；若还拿不准，就先结构化问清。
 
 ## 快速导航
 
 - [30 秒上手](#30-秒上手)
+- [当前结构](#当前结构)
 - [适合谁用](#适合谁用)
 - [这是什么](#这是什么)
 - [如何安装](#如何安装)
-- [`harness-dev` 怎么用更顺](#harness-dev-怎么用更顺)
-- [`harness-dao` 怎么用更顺](#harness-dao-怎么用更顺)
+- [`odai` 怎么用更顺](#odai-怎么用更顺)
 - [Skills 一览](#skills-一览)
 - [面向维护者](#面向维护者)
 
 ## 30 秒上手
 
-1. 先把整套 skill 接进当前环境：
+1. 先把统一入口 skill 接进当前环境：
 
 ```bash
 npx skills add https://github.com/orziz/AISkills
 ```
 
-2. 不知道先用哪个时，先看你现在更缺哪一种能力：路线大致有了，想让 AI 接住任务并持续推进，用 `harness-dev`；方向、边界、主路、先手，甚至“该不该现在动手”都还没定，用 `harness-dao`。默认按你当前安装或当前明确调用的那一个 workflow 独立工作，不把两者串成前后接力。
-3. 首轮输入尽量带上这些信息：用 `harness-dev` 时给 `目标`、`材料`、`约束`；用 `harness-dao` 时再多给一条 `底线`，也就是最怕什么、最不能接受什么。
-4. 如果任务已经明确落在单一阶段，直接用对应 skill 会更省心：
+2. 直接用 `odai` 接任务；首轮输入尽量带上 `目标`、`材料`、`约束`。如果你还说不清具体要走哪个模块，也没关系，`dao` 会先判断。
+3. 如果你已经知道自己想走哪种内部模块，也可以在指令里直说：
 
-- 复杂任务，想先定方向、边界、主路与先手：`harness-dao`
-- 需求、方案或 bug 规划：`feature-plan`
-- 页面、流程、状态、交互、视觉或 UI/UX 设计说明：`design-spec`
-- 边界明确，直接落地代码和测试：`implement-code`
-- 正式做一次结构化代码审查：`review-sslb`
-- 整理项目 README、规则或 AI 接手基线：`project-guide`
-- 整理日报、commit message 或 PR message：`ribao`
+- “用 `odai` 接这个需求，先判断该走哪个模块，如果拿不准就结构化问我。”
+- “用 `odai` 走 `dao` 看这个需求，先定边界和主路。”
+- “用 `odai` 接这个需求，按 `harness-dev` 路线推进到结果总结。”
+- “用 `odai` 按 `review-sslb` 风格审这个 PR。”
+- “用 `odai` 用 `ribao` 模块整理今天的产出。”
+
+## 当前结构
+
+- 对外安装和触发都只认 `odai`。
+- `dao` 是默认总控，负责判断当前该走哪个模块，以及该输出短判断、草案、设计、审查、执行单还是直接推进。
+- 源文件结构以 `skills/odai/` 为唯一 source-of-truth，模块正文与 support files 都收进这个目录下。
+- 同步脚本只分发当前统一入口 skill，并保持 Claude / GitHub / Trae 产物一致。
 
 ## 适合谁用
 
 如果你刚好有下面这些需求，这个仓库会比较顺手：
 
-- 想把常用 prompt 固化成可复用 skill
-- 想把页面、交互、状态或设计说明整理成可交接文档
-- 想在已有方案或设计边界下，直接让 AI 落地代码、测试和必要文档
-- 想让代码审查输出更结构化一些
-- 想把“需求整理清楚 -> 审查 -> 推进”做成可以直接接手的工作流
-- 想整理整个项目的 README、规则和 AI 接手基线
-- 想把 skill 源文件与多端安装版本分开维护
-- 想同时兼顾 Claude、Copilot、Trae 等不同入口
+- 想把常用 prompt 和 workflow 收成一个统一入口，而不是记一串技能名
+- 想让 AI 在规划、设计、审查、实现之间自动选主路继续推进
+- 想先由一个总控判断方向、边界、主路和先手，再切到下游模块
+- 想保留不同审查风格和不同 workflow，但不想继续维护多个并列安装入口
+- 想整理项目 README、规则、AI 接手基线或日报 / commit / PR 描述
+- 想同时兼顾 Claude、Copilot、Trae 等不同入口，并保持安装结构一致
 
 ## 这是什么
 
-这个仓库的核心思路很简单：
+这个仓库现在的核心思路是：
 
-- `skills/` 目录下维护标准源文件，内容以这里为准
-- 多端手动安装版本从标准源同步生成，尽量避免各端长期分叉
-- 能做成完整 workflow 的，不只停留在单段 prompt
-- 结构尽量清楚，安装尽量直接，日常维护尽量低成本
+- 对外只有 `skills/odai/SKILL.md` 这一个标准入口
+- 内部模块正文放在 `skills/odai/references/modules/`
+- 模块级规则、模板和脚本按模块名收在 `references/<module-name>/`、`assets/<module-name>/`、`scripts/<module-name>/`
+- `dao` 是默认总控；`harness-dev` 是偏开发推进的总控 workflow
+- 多端手动安装版本仍由统一脚本同步生成，尽量避免各端长期分叉
 
-如果你把它当成“一个给自己和项目长期复用的 skill 工具箱”，理解会比较顺。
+如果你把它理解成“一个先由 dao 决定路由和产物，再按需调用内部模块的 skill 工具箱”，会更贴近现在的结构。
 
 ## 如何安装
 
 ### 1. 自动安装（推荐）
 
-如果你使用支持 `skills add` 的方式，默认更推荐直接这样装：
-
 ```bash
 npx skills add https://github.com/orziz/AISkills
 ```
 
-仓库中的标准 skill 安装入口为：
-
-- `skills/<skill-name>/SKILL.md`
-
 适合场景：
 
-- 想快速把整套标准源接进当前环境
+- 想快速把统一入口接进当前环境
 - 不想手动复制多个 skill 文件
-- 日常主要按仓库中的标准源使用，不需要自己维护一套手动安装副本
+- 日常直接通过 `odai` 触发内部模块，不自己维护一套手动安装副本
 
 ### 2. 手动安装
 
-手动安装更适合这些情况：
-
-- 你只想装少数几个 skill
-- 你想精确控制装到哪个入口、哪个目录
-- 你正在开发、调试或对比手动安装版本
-
 #### Claude
 
-将对应 skill 放入 `.claude/commands/` 目录即可，例如：
+- `.claude/commands/odai.md`
+- `.claude/commands/odai/`
 
-- `.claude/commands/review-sslb.md`
+之后在输入框中使用：
 
-若该 skill 还带有同名资源目录，也需要一并复制，例如：
-
-- `.claude/commands/harness-dev/`
-
-之后在输入框中使用对应命令触发，例如：
-
-- `/review-sslb`
-
-补充说明：
-
-- 如果路径正确但命令没有出现，可以尝试重启 Claude 终端或编辑器
+- `/odai`
 
 #### Copilot
 
-将对应 skill 的整个目录放入项目的 `.github/skills/` 下，例如：
-
-- `.github/skills/harness-dev/SKILL.md`
+- `.github/skills/odai/SKILL.md`
 
 补充说明：
 
 - Copilot 的手动安装版本按“一个 skill 一个目录”组织
-- 若 skill 带有 `references/`、`assets/`、`scripts/` 等附属目录，必须连同整个目录一起复制
+- `odai` 带有 `references/`、`assets/`、`scripts/` 等附属目录，必须连同整个目录一起复制
 - 只有保留目录结构，`SKILL.md` 中的相对路径才能继续可用
 
 > `copilot-instructions.md` 更适合项目级全局说明，不适合作为多文件 skill 的承载位置。
 
 #### Trae
 
-放入同名目录即可，`rules` 和 `skills` 二选一。
-
-若该 skill 还带有同名资源目录，也需要一并复制，例如：
-
-- `.trae/skills/harness-dev/`
-- `.trae/rules/harness-dev/`
+- `.trae/skills/odai.md`
+- `.trae/skills/odai/`
+- `.trae/rules/odai.md`
+- `.trae/rules/odai/`
 
 `rules`：
 
 - 每次对话都会读取
-- 适合希望全局持续生效的内容
+- 适合希望统一入口长期持续生效的内容
 
 `skills`：
 
 - 通过指令或自然语言触发
-- 更适合像“使用三省六部来审查 XXX”这类场景
+- 更适合按任务临时点名内部模块的场景
 
-## `harness-dev` 怎么用更顺
+## `odai` 怎么用更顺
 
-`harness-dev` 更适合“接住一整段任务并持续推进”，而不是只做一次性问答。
-它不会默认把所有 skill 都串一遍，而是按任务需要，选择性调用 `project-guide`、`feature-plan`、`design-spec`、`review-sslb`、`implement-code`。
+`odai` 不是把所有模块机械串起来，而是先由 `dao` 判断你当前真正缺的是哪一层、该调用哪个模块、该产出什么形态，再读取对应内部模块继续工作。
 
-推荐在首轮输入里尽量带上这三类信息：
+它内部保留两条主 workflow：
 
-- 目标：你到底想做成什么
-- 材料：需求、报错、截图、文件、分支、PR、已有草案
-- 约束：时间、范围、不能动的部分、是否允许直接改
+- `dao`：默认总控，更适合“先定方向、边界、主路与先手”，也负责判断模块选择和产物形态
+- `harness-dev`：偏开发推进，更适合“接住一整段开发任务并持续推进”
 
-推荐触发方式：
+除此之外，你也可以直接点名单阶段模块或工具模块：
 
-- “用 `harness-dev` 接这个需求：先帮我明确范围，形成可执行草案；如果路线清楚就直接推进，最后告诉我当前状态和下一步。”
-- “用 `harness-dev` 接这个报错：先判断是信息不足还是可以直接诊断；如果能落地修复就继续做，不要只停在分析。”
-- “用 `harness-dev` 继续上次那个任务：先恢复上下文和当前裁决，再按已有路线往下推进并做最后说明。”
-- “用 `harness-dev` 接这个 PR / 分支：先做结构化复核，定案后把该改的地方直接改掉，最后给我明确结论。”
-
-如果你的任务已经明确落在某个单一阶段，直接用上面的对应 skill 会更省心，不必为了流程完整强行先走 `harness-dev`。
-
-## `harness-dao` 怎么用更顺
-
-`harness-dao` 更适合“先定势，再落手”：先收目标、边界、主路、胜点、庙算和先手，再决定如何推进。
-它是一套独立闭环 workflow，不和 `harness-dev` 混跑；内部强调先定道、再收术、后落法，但一旦边界与权限允许，会继续把本轮范围内能做的动作做完到复核与结果总结。
-
-补充约束：
-
-- 它是独立 workflow；若命中其他专项 skill，也只是借力，不切换到另一套总控
-- 提问必须是一轮结构化问题组，不拆成多轮散问
-- 收到回答后默认不中断继续
-- 问题一旦明确，默认把本轮范围内能做的动作执行到结果总结
-
-推荐在首轮输入里尽量带上四类信息：
-
-- 目标：真正想做成什么
-- 材料：需求、报错、分支、PR、草案、截图或现有结论
-- 约束：时间、范围、不能动的部分、权限边界
-- 底线：最怕什么、最不能接受什么
+- `feature-plan`：规格、方案、bug 诊断
+- `design-spec`：页面、交互、状态、视觉、体验说明
+- `implement-code`：代码实现、修 bug、补测试、重构落地
+- `project-guide`：README、规则、AI 接手基线
+- `review-*`：按不同风格做代码审查
+- `ribao`：日报、commit message、PR message
+- `skill-author` / `skill-sync`：维护这个仓库本身
 
 推荐触发方式：
 
-- “用 `harness-dao` 接这个任务：先定道，再给主路、胜点、庙算和先手；如果边界清楚就继续落法做到结果总结，输出尽量短。”
-- “用 `harness-dao` 看这个方案：按儒道心学和兵法先判断边界、主路、关键风险和该不该先伐谋，再告诉我下一步。”
+- “用 `odai` 接这个需求：先判断该走哪个模块和产物形态，拿不准就结构化问我。”
+- “用 `odai` 接这个需求：先用 `dao` 定边界、主路和关键风险，再继续推进。”
+- “用 `odai` 按 `harness-dev` 路线处理这个实现问题，推进到结果总结。”
+- “用 `odai` 按 `review-band` 风格审这个分支。”
+- “用 `odai` 用 `project-guide` 模块整理这个仓库的 AI 接手基线。”
 
 ## 默认交互方式
 
-本仓库里会主动向用户补关键信息的 skill，默认都遵守同一条交互约定：
+本仓库里会主动向用户补关键信息的内部模块，默认都遵守同一条交互约定：
 
 - 提问优先使用结构化提问组件，例如选项、单选、多选，或“选项 + 自由补充”
 - 收到你的回答后，默认直接继续当前阶段，不额外等一句“继续”
@@ -201,81 +153,78 @@ npx skills add https://github.com/orziz/AISkills
 
 ## Skills 一览
 
-如果你只是来使用这些 skill，不必先把整张表看完；先从上面的“30 秒上手”挑一个入口通常就够了。
+如果你只是来使用这个仓库，不必先把整张表看完；记住 `odai` 这一个入口通常就够了。
 
 ### 面向大多数使用者
 
-这一组覆盖从需求、设计、实现到项目整理的常见工作。
-
 | Skill | 简介 | 适用场景 | 对应文件 |
 | --- | --- | --- | --- |
-| `harness-dev` | 把开发相关需求理解到位，并在 SDD / BDD / TDD 之间做结构化裁决、推进与总结 | 开发需求、方案评审、复杂实现推进、代码问题诊断与持续推进 | `skills/harness-dev/SKILL.md` |
-| `harness-dao` | 以道、术、法三层拆解复杂任务，结合儒道心学与兵法先定势、主路与先手 | 复杂需求推进、方向裁决、多路线取舍、需要先定边界与主路的任务 | `skills/harness-dao/SKILL.md` |
-| `feature-plan` | 在功能设计与问题诊断阶段理解用户真实需求，收敛成规格、方案与执行前提草案 | 功能设计、需求理解、方案规划与 bug 诊断 | `skills/feature-plan/SKILL.md` |
-| `design-spec` | 把需求、页面、模块、流程与体验想法收敛成可交接的行为、交互与界面设计说明 | 页面设计、模块设计、交互设计、视觉设计、UI/UX 优化、信息架构、状态设计、设计说明文档整理 | `skills/design-spec/SKILL.md` |
-| `implement-code` | 在边界明确时落地代码、测试与必要文档，并在需要时按 TDD 推进实现 | 新功能实现、bug 修复、重构落地、补测试、按既有方案编码 | `skills/implement-code/SKILL.md` |
-| `project-guide` | 归纳整个项目的目标、结构、约束、命名与协作规则，形成可复用的项目级说明文档 | 新项目接手、项目规范整理、README/规则文档整理、AI 上下文基线整理 | `skills/project-guide/SKILL.md` |
-| `ribao` | 根据当天工作内容、总结或 git 变更，生成一份可复用的结构化成果描述；可直接用于日报、git commit message 或 git PR message | 写日报、commit message、PR message | `skills/ribao/SKILL.md` |
+| `odai` | 以 dao 为总控，把规划、设计、审查、实现、总结与仓库维护能力收束成一个统一入口，并按需调用内部模块 | 复杂任务接单、方向裁决、规格规划、设计说明、代码实现、代码审查、成果整理与 skill 仓库维护 | `skills/odai/SKILL.md` |
 
-### 审查类 skill
+### 内置模块
 
-如果你主要想做代码审查，再看这一组。
+这些名字仍然可以在提示词里点名，但模块选择和产物形态仍优先由 `dao` 根据语义做裁决。
 
-| Skill | 简介 | 适用场景 | 对应文件 |
-| --- | --- | --- | --- |
-| `review-sslb` | 使用三省六部式代码审查，按中书省、尚书省、六部、门下省、锦衣卫五阶段输出结构化审查结论 | 需要更正式、更有层次地做代码审查 | `skills/review-sslb/SKILL.md` |
-| `review-hgsc` | 使用后宫分位式代码审查，按皇后、四妃、九嫔分工输出结构化审查结论 | 想让代码审查更有风格，但仍保持专业判断 | `skills/review-hgsc/SKILL.md` |
-| `review-gal` | 使用 gal 多角色对话式代码审查，按青梅、学姐、后辈、傲娇与 true end 总结输出结构化结论 | 需要比较实现路线、收束方案分歧时的代码审查 | `skills/review-gal/SKILL.md` |
-| `review-band` | 使用少女乐队分工式代码审查，按主唱、吉他、贝斯、鼓手、制作人分段输出结构化结论 | 想做更有角色感、但仍专业可执行的 PR 审查 | `skills/review-band/SKILL.md` |
-| `review-anime` | 使用 anime 多角色连续对话式代码审查，以强角色互动输出带自然技术锚点的审查意见 | 想要更放飞、更有演出感，但又不想看模板化结论的代码审查 | `skills/review-anime/SKILL.md` |
-
-补充说明：
-
-- `harness-dev` 是独立 skill，可单独安装使用；如果环境中已安装 `project-guide`、`feature-plan`、`design-spec`、`review-sslb`、`implement-code`，它会按情况调用这些 skill，但不要求同时安装
-- 审查类 skill 的区别主要在输出风格、结构与角色感，不在“能不能做代码审查”本身
+| 模块 | 作用 | 对应文件 |
+| --- | --- | --- |
+| `dao` | 默认总控 workflow，负责方向、边界、主路、先手与复核 | `skills/odai/references/modules/dao.md` |
+| `harness-dev` | 开发类总控 workflow，负责按 SDD / BDD / TDD 判断主驱动并持续推进 | `skills/odai/references/modules/harness-dev.md` |
+| `feature-plan` | 规格规划、方案取舍、bug 诊断 | `skills/odai/references/modules/feature-plan.md` |
+| `design-spec` | 页面、交互、状态、视觉与体验说明 | `skills/odai/references/modules/design-spec.md` |
+| `implement-code` | 代码实现、修 bug、补测试、重构落地 | `skills/odai/references/modules/implement-code.md` |
+| `project-guide` | README、规则、AI 接手基线与项目级说明 | `skills/odai/references/modules/project-guide.md` |
+| `review-sslb` | 三省六部式代码审查 | `skills/odai/references/modules/review-sslb.md` |
+| `review-hgsc` | 后宫分位式代码审查 | `skills/odai/references/modules/review-hgsc.md` |
+| `review-gal` | gal 多角色代码审查 | `skills/odai/references/modules/review-gal.md` |
+| `review-band` | 少女乐队分工式代码审查 | `skills/odai/references/modules/review-band.md` |
+| `review-anime` | anime 多角色连续对话式代码审查 | `skills/odai/references/modules/review-anime.md` |
+| `ribao` | 日报、commit message、PR message 整理 | `skills/odai/references/modules/ribao.md` |
+| `skill-author` | 统一入口内部模块的 source-of-truth 维护 | `skills/odai/references/modules/skill-author.md` |
+| `skill-sync` | 统一入口 skill 的多端同步与 README 回写 | `skills/odai/references/modules/skill-sync.md` |
 
 ## 面向维护者
 
-如果你只是使用这些 skill，这一节通常可以先跳过。
+如果你只是使用 `odai`，这一节通常可以先跳过。
 
 ### 命名约定
 
-当前仓库默认按“对象 / 层级 + 工作类型”来命名：
+当前仓库默认按“对象 / 层级 + 工作类型”来给内部模块命名：
 
+- `dao`：默认总控路线
 - `feature-*`：需求规划、方案规划、问题诊断
 - `design-*`：设计说明、交互、页面、流程、状态
 - `implement-*`：代码实现、测试补齐、落地总结
 - `project-*`：项目级说明、规则、基线、README 整理
 - `review-*`：代码审查
-- `skill-*`：仓库维护与 skill 工具链
+- `skill-*`：仓库维护与同步工具链
+- `harness-*`：偏开发推进的 workflow
 
 补充约定：
 
-- skill id 默认使用小写 kebab-case 英文，便于跨工具、跨平台和路径复用
+- 模块 id 默认使用小写 kebab-case 英文，便于跨工具、跨平台和路径复用
 - 面向人读的说明、分类和文案，优先用中文表达职责与场景
-- 若是对现有 skill 的重命名，优先在源文件里显式保留迁移信息，而不是只靠口头约定
+- 不再新增第二个对外 skill；新增能力默认收进 `odai` 的内部模块资源
 
-### 仓库维护工具
-
-| Skill | 简介 | 适用场景 | 对应文件 |
-| --- | --- | --- | --- |
-| `skill-author` | 把用户已经想好的 skill 整理成仓库内标准源文件，并按需补齐骨架 | 新增 skill、改写现有 skill、沉淀 prompt 或 workflow 为标准 skill 源文件 | `skills/skill-author/SKILL.md` |
-| `skill-sync` | 基于标准源 skill 生成各端安装版本，并对 README 做最小范围回写 | skill 定稿后的多端同步、README 回写与安装版本更新 | `skills/skill-sync/SKILL.md` |
+### 维护流程
 
 推荐顺序：
 
-1. 用 `skill-author` 新增或改写 `skills/<skill-name>/SKILL.md`
-2. 需要时补 `references/`、`assets/`、`scripts/`
-3. 确认源文件稳定后，再用 `skill-sync` 同步 Claude / GitHub / Trae 安装版本，并回写 `README.md`
+1. 用 `skill-author` 模块新增或改写 `skills/odai/references/modules/<module-name>.md`
+2. 需要时补 `skills/odai/references/<module-name>/`、`skills/odai/assets/<module-name>/`、`skills/odai/scripts/<module-name>/`
+3. 确认 unified source 稳定后，再用 `skill-sync` 模块或 `node scripts/skill-sync.js` 同步 Claude / GitHub / Trae 安装版本，并回写 `README.md`
 
 标准安装入口：
 
-- `skills/<skill-name>/SKILL.md`
+- `skills/odai/SKILL.md`
 
 ## 目录说明
 
 ```text
-skills/                标准源 skill
+skills/odai/           统一入口 source skill
+	references/modules/  内部模块正文
+	references/*/        模块级规则、说明等 support files
+	assets/*/            模块级模板等资源
+	scripts/*/           模块级脚本资源（按需）
 scripts/               仓库维护脚本
 .claude/commands/      Claude 手动安装版本
 .github/skills/        GitHub / Copilot 适配版本

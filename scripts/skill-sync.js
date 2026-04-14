@@ -52,13 +52,11 @@ const TARGETS = [
   },
 ]
 const MISSING_SOURCE_TEMPLATE = '错误：skills/{name}/SKILL.md 不存在，无法生成手动安装版本。'
-const USAGE_ERROR = '错误：请至少传入一个 skill 名称，例如：skill-sync review-sslb harness-dev'
+const DEFAULT_SKILL_NAMES = ['odai']
+const USAGE_ERROR = '错误：skill 名称必须是非空且不含空格的单个标识，例如：skill-sync odai'
 
 function main() {
   const skillNames = parseSkillNames(process.argv.slice(2))
-  if (skillNames.length === 0) {
-    fail(USAGE_ERROR)
-  }
 
   const repoRoot = path.resolve(__dirname, '..')
   const readmePath = path.join(repoRoot, 'README.md')
@@ -145,6 +143,10 @@ function main() {
 }
 
 function parseSkillNames(args) {
+  if (args.length === 0) {
+    return [...DEFAULT_SKILL_NAMES]
+  }
+
   const parsed = []
   const seen = new Set()
 
@@ -529,7 +531,26 @@ function syncReadme(readmePath, skillName, description, scenario, readmeSection,
   }
 
   const skillPathToken = `\`skills/${skillName}/SKILL.md\``
-  const existingRowIndex = lines.findIndex((line) => line.includes(skillPathToken))
+  let normalizedExistingRows = false
+  const existingRowIndices = lines
+    .map((line, index) => (line.startsWith('|') && line.includes(skillPathToken) ? index : -1))
+    .filter((index) => index !== -1)
+
+  if (existingRowIndices.length > 1) {
+    const preferredIndex =
+      existingRowIndices.find((index) => isReadmeRowInSection(lines, index, targetSection)) ?? existingRowIndices[0]
+
+    for (let index = existingRowIndices.length - 1; index >= 0; index -= 1) {
+      const rowIndex = existingRowIndices[index]
+      if (rowIndex === preferredIndex) {
+        continue
+      }
+      lines.splice(rowIndex, 1)
+      normalizedExistingRows = true
+    }
+  }
+
+  const existingRowIndex = lines.findIndex((line) => line.startsWith('|') && line.includes(skillPathToken))
   if (existingRowIndex !== -1) {
     const existingRow = parseReadmeRow(lines[existingRowIndex])
     const row = buildReadmeRow({
@@ -538,6 +559,9 @@ function syncReadme(readmePath, skillName, description, scenario, readmeSection,
       scenario: scenario || existingRow?.scenario || DEFAULT_SCENARIO,
     })
     if (lines[existingRowIndex] === row && isReadmeRowInSection(lines, existingRowIndex, targetSection)) {
+      if (normalizedExistingRows) {
+        writeFile(readmePath, lines.join('\n'))
+      }
       if (removedSkills.length > 0) {
         writeFile(readmePath, lines.join('\n'))
       }
@@ -587,12 +611,12 @@ function removeReadmeRows(lines, skillNames) {
   for (const skillName of normalizeListValues(skillNames)) {
     const skillPathToken = `\`skills/${skillName}/SKILL.md\``
     let removedCurrentSkill = false
-    let rowIndex = lines.findIndex((line) => line.includes(skillPathToken))
+    let rowIndex = lines.findIndex((line) => line.startsWith('|') && line.includes(skillPathToken))
 
     while (rowIndex !== -1) {
       lines.splice(rowIndex, 1)
       removedCurrentSkill = true
-      rowIndex = lines.findIndex((line) => line.includes(skillPathToken))
+      rowIndex = lines.findIndex((line) => line.startsWith('|') && line.includes(skillPathToken))
     }
 
     if (removedCurrentSkill) {
