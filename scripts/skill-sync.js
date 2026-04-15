@@ -62,6 +62,14 @@ const SOURCE_VALIDATION_RULES = {
         phrase: '推断项',
         guidance: '改成“待验证项 / 待确认项 / 风险项”',
       },
+      {
+        phrase: '退回文本提问',
+        guidance: '改成“先明确说明‘当前环境不支持’，再改用文字提问”',
+      },
+      {
+        phrase: '不降级为零碎文本盘问',
+        guidance: '改成“先明确说明‘当前环境不支持’，再改用文字提问”',
+      },
     ],
   },
 }
