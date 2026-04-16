@@ -1,6 +1,6 @@
 # AISkills
 
-一个把规划、设计、审查、实现、总结与仓库维护收束成单一入口 skill 的仓库。
+一个把规划、游戏策划、游戏视觉设计、通用设计、审查、实现、总结与仓库维护收束成单一入口 skill 的仓库。
 
 这个仓库对外只有一个安装入口：`odai`。什么时候该走哪个模块、做到什么产物形态，都先由 `道` 根据用户语义、目标、约束和想法来判断；若还拿不准，就先结构化问清。
 
@@ -127,6 +127,8 @@ npx skills add https://github.com/orziz/AISkills
 
 除此之外，你也可以直接点名单阶段模块或工具模块：
 
+- `game-plan`：游戏系统、玩法、数值、经济、商业、关卡与内容规划
+- `game-design`：完整游戏视觉设计，覆盖 UI/UX/UE、角色场景、宣传品牌与特效演出
 - `feature-plan`：规格、方案、bug 诊断
 - `design-spec`：页面、交互、状态、视觉、体验说明
 - `implement-code`：代码实现、修 bug、补测试、重构落地
@@ -159,7 +161,7 @@ npx skills add https://github.com/orziz/AISkills
 
 | Skill | 简介 | 适用场景 | 对应文件 |
 | --- | --- | --- | --- |
-| `odai` | 以道为总控，把规划、设计、审查、实现、总结与仓库维护能力收束成一个统一入口，并按需调用内部模块 | 复杂任务接单、方向裁决、规格规划、设计说明、代码实现、代码审查、成果整理与 skill 仓库维护 | `skills/odai/SKILL.md` |
+| `odai` | 以道为总控，把规划、游戏策划、游戏视觉设计、通用设计、审查、实现、总结与仓库维护能力收束成一个统一入口，并按需调用内部模块 | 复杂任务接单、方向裁决、规格规划、游戏策划、游戏视觉设计、设计说明、代码实现、代码审查、成果整理与 skill 仓库维护 | `skills/odai/SKILL.md` |
 
 ### 内置模块
 
@@ -169,6 +171,8 @@ npx skills add https://github.com/orziz/AISkills
 | --- | --- | --- |
 | `dao`（文案写作 `道`） | 默认总控 workflow，负责方向、边界、主路、先手与复核 | `skills/odai/references/modules/dao.md` |
 | `harness-dev` | 开发类总控 workflow，负责按 SDD / BDD / TDD 判断主驱动并持续推进 | `skills/odai/references/modules/harness-dev.md` |
+| `game-plan` | 全域游戏策划主模块，负责系统、玩法、数值、经济、商业、关卡与内容规划 | `skills/odai/references/modules/game-plan.md` |
+| `game-design` | 完整游戏视觉设计主模块，负责 UI/UX/UE、角色场景、宣传品牌与特效演出 | `skills/odai/references/modules/game-design.md` |
 | `feature-plan` | 规格规划、方案取舍、bug 诊断 | `skills/odai/references/modules/feature-plan.md` |
 | `design-spec` | 页面、交互、状态、视觉与体验说明 | `skills/odai/references/modules/design-spec.md` |
 | `implement-code` | 代码实现、修 bug、补测试、重构落地 | `skills/odai/references/modules/implement-code.md` |
@@ -191,6 +195,7 @@ npx skills add https://github.com/orziz/AISkills
 当前仓库默认按“对象 / 层级 + 工作类型”来给内部模块命名：
 
 - `dao`：默认总控路线
+- `game-*`：游戏策划与游戏视觉设计
 - `feature-*`：需求规划、方案规划、问题诊断
 - `design-*`：设计说明、交互、页面、流程、状态
 - `implement-*`：代码实现、测试补齐、落地总结

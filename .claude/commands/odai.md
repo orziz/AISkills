@@ -1,6 +1,6 @@
 ---
 name: odai
-description: 以道为总控，把规划、设计、审查、实现、总结与仓库维护能力收束成一个统一入口，并按需调用内部模块
+description: 以道为总控，把规划、游戏策划、游戏视觉设计、通用设计、审查、实现、总结与仓库维护能力收束成一个统一入口，并按需调用内部模块
 ---
 
 用户输入：
@@ -24,6 +24,8 @@ $ARGUMENTS
 
 - `dao`（概念文案：`道`）：`odai/references/modules/dao.md`
 - `harness-dev`：`odai/references/modules/harness-dev.md`
+- `game-plan`：`odai/references/modules/game-plan.md`
+- `game-design`：`odai/references/modules/game-design.md`
 - `feature-plan`：`odai/references/modules/feature-plan.md`
 - `design-spec`：`odai/references/modules/design-spec.md`
 - `implement-code`：`odai/references/modules/implement-code.md`
@@ -39,7 +41,7 @@ $ARGUMENTS
 
 ## 内部调用约定
 
-1. 当内部模块正文出现“调用 `feature-plan` / `design-spec` / `implement-code` / review 家族”等说法时，一律解释为：读取当前 skill 内对应的模块文件并以内置模块方式继续，不调用外部 skill。
+1. 当内部模块正文出现“调用 `game-plan` / `game-design` / `feature-plan` / `design-spec` / `implement-code` / review 家族”等说法时，一律解释为：读取当前 skill 内对应的模块文件并以内置模块方式继续，不调用外部 skill。
 2. 当内部模块正文出现 `odai/references/...`、`odai/assets/...`、`scripts/...` 路径时，一律以当前统一 skill 目录为根；若模块已改成 namespaced 路径，就按改写后的路径读取。
 3. 默认优先少切换：只有当前主模块不足以继续时，才切到相邻模块；切换前先说明当前判断。
 4. 用户明确点名 `道` 或 `dao` 时都走同一总控模块；对外概念文案统一写 `道`，模块 id 与文件名保持 `dao`。
