@@ -4,6 +4,8 @@
 
 这个仓库对外只有一个安装入口：`odai`。什么时候该走哪个模块、做到什么产物形态，都先由 `道` 根据用户语义、目标、约束和想法来判断；若还拿不准，就先结构化问清。
 
+当前 main 分支承载的是统一入口 `odai`。如果你还需要分离出来的旧多 skill 结构，请改装 `old` 分支。
+
 ## 快速导航
 
 - [30 秒上手](#30-秒上手)
@@ -23,6 +25,12 @@
 npx skills add https://github.com/orziz/AISkills
 ```
 
+如果你要继续使用分离出来的旧多 skill 结构，可以改装 `old` 分支：
+
+```bash
+npx skills add https://github.com/orziz/AISkills/tree/old
+```
+
 2. 直接用 `odai` 接任务；首轮输入尽量带上 `目标`、`材料`、`约束`。如果你还说不清具体要走哪个模块，也没关系，`道` 会先判断。
 3. 如果你已经知道自己想走哪种内部模块，也可以在指令里直说：
 
@@ -38,6 +46,7 @@ npx skills add https://github.com/orziz/AISkills
 - `道` 是默认总控，负责判断当前该走哪个模块，以及该输出短判断、草案、设计、审查、执行单还是直接推进。
 - 源文件结构以 `skills/odai/` 为唯一 source-of-truth，模块正文与 support files 都收进这个目录下。
 - 同步脚本只分发当前统一入口 skill，并保持 Claude / GitHub / Trae 产物一致。
+- 旧的多 skill 布局已分离到 `old` 分支，供仍需旧结构的安装场景继续使用。
 
 ## 适合谁用
 
@@ -75,6 +84,18 @@ npx skills add https://github.com/orziz/AISkills
 - 想快速把统一入口接进当前环境
 - 不想手动复制多个 skill 文件
 - 日常直接通过 `odai` 触发内部模块，不自己维护一套手动安装副本
+
+如果你要安装分离出来的旧多 skill 版本，请使用 `old` 分支：
+
+```bash
+npx skills add https://github.com/orziz/AISkills/tree/old
+```
+
+适合场景：
+
+- 你还在沿用旧的多 skill 入口
+- 你需要继续使用 `harness-dev`、`harness-dao` 等旧分支里的独立安装方式
+- 你在做旧结构迁移或对照
 
 ### 2. 手动安装
 
