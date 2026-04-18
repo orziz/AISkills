@@ -19,7 +19,7 @@ scenario: 通用功能设计、需求理解、方案规划与 bug 诊断
 
 定位：本 skill 只负责理解、诊断、规划、取舍、规格草案和文本草案整理。需要时可以产出或更新 Markdown 规划文档，但不进入代码、配置、脚本、测试、资源或数据实施。若任务核心已经是游戏策划本体，本模块只作为相邻支援，不作为主收口模块。
 
-涉及问题整理、工作草案字段、规划文档结构或提问分组时，统一沿用 `references/dao/terminology-baseline.md` 的术语与字段名。
+涉及问题整理、工作草案字段、规划文档结构或提问分组时，统一沿用 `odai/references/dao/terminology-baseline.md` 的术语与字段名。
 
 ## 最小工作骨架
 
@@ -54,7 +54,7 @@ scenario: 通用功能设计、需求理解、方案规划与 bug 诊断
 9. 需要文档承载时，尽早给出 Markdown 草案；fp 只到规格、文档与方案，不进入非文档实施。
 10. 若规格已经稳定，但用户可见行为、状态体验、页面流程或验收口径仍然说不清，要明确切到内部 `design-spec` 模块做 BDD 层收口。
 11. 若当前问题已经明确落在游戏策划本体，例如系统规则、数值平衡、经济循环、商业模型、关卡结构或活动方案，要明确切到内部 `game-plan` 模块继续。
-12. 命中附件、低信息输入、步进式提问或候选方案扩展时，读 `references/feature-plan/planning-playbook.md`；命中 bug、输出策略或交付边界时，读 `references/feature-plan/delivery-playbook.md`。
+12. 命中附件、低信息输入、步进式提问或候选方案扩展时，读 `odai/references/feature-plan/planning-playbook.md`；命中 bug、输出策略或交付边界时，读 `odai/references/feature-plan/delivery-playbook.md`。
 
 ## 理解、校准与扩展
 
@@ -90,11 +90,11 @@ scenario: 通用功能设计、需求理解、方案规划与 bug 诊断
 
 以下内容不必一开始全文背诵，但遇到对应场景时必须展开：
 
-- `references/feature-plan/planning-playbook.md`
+- `odai/references/feature-plan/planning-playbook.md`
   只要当前任务涉及附件材料、低信息输入、步进式提问、多角度分析、主动扩展候选方案，或需要快速起一版对话草案结构，就必须读取。
-- `references/feature-plan/delivery-playbook.md`
+- `odai/references/feature-plan/delivery-playbook.md`
   只要当前任务涉及 bug 场景、输出策略判断、交付与执行确认、AI 文档产出，或需要判断哪些不确定必须先问用户，就必须读取。
 
-若当前任务主要矛盾在字段命名、问题分组或工作草案结构统一，也要补读 `references/dao/terminology-baseline.md`。
+若当前任务主要矛盾在字段命名、问题分组或工作草案结构统一，也要补读 `odai/references/dao/terminology-baseline.md`。
 
 默认先按本文件主规则工作；一旦命中上述场景，就展开对应 reference，不要只靠入口文件硬扛。

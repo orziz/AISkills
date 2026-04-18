@@ -16,7 +16,14 @@ const BUNDLED_RESOURCE_DIRS = ['references', 'assets', 'scripts']
 const VALIDATED_TEXT_EXTENSIONS = new Set(['.md'])
 const SOURCE_VALIDATION_RULES = {
   odai: {
-    requiredRelativePaths: ['references/dao/terminology-baseline.md'],
+    requiredRelativePaths: [
+      'references/dao/terminology-baseline.md',
+      'references/dao/parallel-consensus-playbook.md',
+      'references/dao/model-selection-baseline.md',
+      'assets/dao/subagent-execution-template.md',
+    ],
+    requiredReadmeHeadings: ['### 面向大多数使用者', '### 2. 手动安装', '### 维护流程', '## 目录说明'],
+    requiredReadmeSnippets: ['标准安装入口：', '`skills/odai/SKILL.md`', 'skills/odai/           统一入口 source skill'],
     bannedPhrases: [
       {
         phrase: '问题定义候选',
@@ -131,9 +138,13 @@ function main() {
       const targetRoot = path.join(repoRoot, ...target.rootSegments)
       const entryRelativePath = target.entryRelativePath(payload.skillName)
       const entryPath = path.join(targetRoot, entryRelativePath)
-      const targetBody = target.rewriteResourcePaths
-        ? rewriteBundledResourcePaths(payload.sourceBody, `${payload.skillName}/`, payload.bundledResourceDirs)
-        : payload.sourceBody
+      const resourcePrefix = target.rewriteResourcePaths ? `${payload.skillName}/` : ''
+      const targetBody = rewriteInstallPathReferences(payload.sourceBody, {
+        skillName: payload.skillName,
+        entryReferencePath: path.basename(entryRelativePath),
+        resourcePrefix,
+        bundledResourceDirs: payload.bundledResourceDirs,
+      })
 
       const content =
         target.kind === 'claude'
@@ -141,7 +152,7 @@ function main() {
               name: payload.sourceName,
               description: payload.description,
               body: targetBody,
-              existingClaude: payload.existingClaude,
+              claudeConfig: payload.claudeConfig,
             })
           : buildGenericTarget({
               name: payload.sourceName,
@@ -168,6 +179,8 @@ function main() {
           sourceDir: payload.sourceDir,
           skillName: payload.skillName,
           bundledResourceDirs: payload.bundledResourceDirs,
+          entryReferencePath: path.basename(entryRelativePath),
+          resourcePrefix,
           targetRoot,
           targetSkillDir: path.join(targetRoot, target.resourceBaseDir(payload.skillName)),
         })
@@ -228,7 +241,6 @@ function parseSkillNames(args) {
 function loadSkillPayload(repoRoot, skillName) {
   const sourceDir = path.join(repoRoot, 'skills', skillName)
   const sourcePath = path.join(sourceDir, 'SKILL.md')
-  const existingClaudePath = path.join(repoRoot, '.claude', 'commands', `${skillName}.md`)
 
   if (!fs.existsSync(sourcePath)) {
     fail(MISSING_SOURCE_TEMPLATE.replace('{name}', skillName))
@@ -242,10 +254,13 @@ function loadSkillPayload(repoRoot, skillName) {
   const readmeSection = getFrontmatterValue(sourceFrontmatter, 'readme-section')
   const replaces = getFrontmatterList(sourceFrontmatter, 'replaces').filter((name) => name !== skillName)
   const bundledResourceDirs = getBundledResourceDirs(sourceDir)
-  const existingClaudeText = fs.existsSync(existingClaudePath) ? readNormalized(existingClaudePath) : null
-  const existingClaude = existingClaudeText ? splitClaudeWrapper(existingClaudeText) : null
+  const claudeConfig = {
+    allowedTools: getFrontmatterValue(sourceFrontmatter, 'claude-allowed-tools'),
+    argumentHint: getFrontmatterValue(sourceFrontmatter, 'claude-argument-hint'),
+  }
 
   validateSkillSource({ repoRoot, skillName, sourceDir })
+  validateReadmeContract({ repoRoot, skillName })
 
   return {
     skillName,
@@ -257,7 +272,7 @@ function loadSkillPayload(repoRoot, skillName) {
     readmeSection,
     replaces,
     bundledResourceDirs,
-    existingClaude,
+    claudeConfig,
   }
 }
 
@@ -295,6 +310,51 @@ function validateSkillSource({ repoRoot, skillName, sourceDir }) {
       messageLines.push(
         `- ${violation.relativePath}:${violation.lineNumber} 含“${violation.phrase}”，请${violation.guidance}`
       )
+    }
+  }
+
+  fail(messageLines.join('\n'))
+}
+
+function validateReadmeContract({ repoRoot, skillName }) {
+  const rules = SOURCE_VALIDATION_RULES[skillName]
+  if (!rules) {
+    return
+  }
+
+  const requiredHeadings = rules.requiredReadmeHeadings || []
+  const requiredSnippets = rules.requiredReadmeSnippets || []
+  if (requiredHeadings.length === 0 && requiredSnippets.length === 0) {
+    return
+  }
+
+  const readmePath = path.join(repoRoot, 'README.md')
+  if (!fs.existsSync(readmePath)) {
+    fail('错误：README.md 不存在，无法完成同步。')
+  }
+
+  const text = readNormalized(readmePath)
+  const lines = text.split('\n')
+  const missingHeadings = requiredHeadings.filter((heading) => !lines.includes(heading))
+  const missingSnippets = requiredSnippets.filter((snippet) => !text.includes(snippet))
+
+  if (missingHeadings.length === 0 && missingSnippets.length === 0) {
+    return
+  }
+
+  const messageLines = ['错误：README.md 未通过同步前校验。']
+
+  if (missingHeadings.length > 0) {
+    messageLines.push('缺少关键分节：')
+    for (const heading of missingHeadings) {
+      messageLines.push(`- ${heading}`)
+    }
+  }
+
+  if (missingSnippets.length > 0) {
+    messageLines.push('缺少关键锚点：')
+    for (const snippet of missingSnippets) {
+      messageLines.push(`- ${snippet}`)
     }
   }
 
@@ -453,77 +513,33 @@ function normalizeListValues(values) {
   return normalized
 }
 
-function splitClaudeWrapper(text) {
-  const { frontmatter, body } = splitFrontmatter(text)
-  const prefixed = body.startsWith('用户输入：\n$ARGUMENTS\n\n') ? body : body.startsWith('\n用户输入：\n$ARGUMENTS\n\n') ? body.slice(1) : null
-
-  if (!prefixed) {
-    return {
-      frontmatter,
-      preamble: '',
-      body,
-    }
-  }
-
-  const rest = prefixed.slice('用户输入：\n$ARGUMENTS\n\n'.length)
-  const sourceStart = findBodyStart(rest)
-  if (sourceStart === -1) {
-    return {
-      frontmatter,
-      preamble: rest,
-      body: '',
-    }
-  }
-
-  const candidatePreamble = rest.slice(0, sourceStart)
-  const candidateBody = rest.slice(sourceStart)
-  const normalizedCandidateBody = normalizeContentBody(candidateBody)
-
-  return {
-    frontmatter,
-    preamble: normalizedCandidateBody ? candidatePreamble : '',
-    body: normalizedCandidateBody ? candidateBody : rest,
-  }
-}
-
-function findBodyStart(text) {
-  const prefixes = ['你是', '若未', '## ', '# ', '用户提供', '日报、', '1. ']
-  for (const prefix of prefixes) {
-    if (text.startsWith(prefix)) {
-      return 0
-    }
-  }
-
-  const patterns = [
-    '\n你是',
-    '\n若未',
-    '\n## ',
-    '\n# ',
-    '\n用户提供',
-    '\n日报、',
-    '\n1. ',
-  ]
-  let index = -1
-  for (const pattern of patterns) {
-    const found = text.indexOf(pattern)
-    if (found !== -1 && (index === -1 || found < index)) {
-      index = found
-    }
-  }
-  return index === -1 ? -1 : index + 1
-}
-
-function normalizeContentBody(text) {
-  return text
-    .replace(/^\n+/, '')
-    .replace(/\s+$/, '')
-}
-
 function getBundledResourceDirs(sourceDir) {
   return BUNDLED_RESOURCE_DIRS.filter((dirName) => {
     const fullPath = path.join(sourceDir, dirName)
     return fs.existsSync(fullPath) && fs.statSync(fullPath).isDirectory()
   })
+}
+
+function rewriteInstallPathReferences(text, { skillName, entryReferencePath, resourcePrefix, bundledResourceDirs }) {
+  let result = rewriteSourceSkillEntryPath(text, skillName, entryReferencePath)
+
+  for (const dirName of BUNDLED_RESOURCE_DIRS) {
+    result = rewriteSourceSkillResourcePathPrefix(result, skillName, resourcePrefix, dirName)
+  }
+
+  return rewriteBundledResourcePaths(result, resourcePrefix, bundledResourceDirs)
+}
+
+function rewriteSourceSkillEntryPath(text, skillName, entryReferencePath) {
+  return text
+    .replaceAll(`./skills/${skillName}/SKILL.md`, entryReferencePath)
+    .replaceAll(`skills/${skillName}/SKILL.md`, entryReferencePath)
+}
+
+function rewriteSourceSkillResourcePathPrefix(text, skillName, resourcePrefix, dirName) {
+  return text
+    .replaceAll(`./skills/${skillName}/${dirName}/`, `${resourcePrefix}${dirName}/`)
+    .replaceAll(`skills/${skillName}/${dirName}/`, `${resourcePrefix}${dirName}/`)
 }
 
 function rewriteBundledResourcePaths(text, resourcePrefix, bundledResourceDirs) {
@@ -544,44 +560,19 @@ function rewriteBundledResourcePathPrefix(text, resourcePrefix, dirName) {
     .replace(new RegExp(`${boundary}${dirName}/`, 'g'), `$1${resourcePrefix}${dirName}/`)
 }
 
-function buildClaudeTarget({ name, description, body, existingClaude }) {
-  const lines = ['---']
+function buildClaudeTarget({ name, description, body, claudeConfig }) {
+  const lines = ['---', `name: ${name}`, `description: ${description || ''}`]
 
-  if (existingClaude) {
-    const existingName = getFrontmatterValue(existingClaude.frontmatter, 'name')
-    const existingDescription = getFrontmatterValue(existingClaude.frontmatter, 'description')
-    const allowedTools = getFrontmatterValue(existingClaude.frontmatter, 'allowed-tools')
-    const argumentHint = getFrontmatterValue(existingClaude.frontmatter, 'argument-hint')
-
-    if (existingName) {
-      lines.push(`name: ${name}`)
-    }
-    lines.push(`description: ${description || existingDescription || ''}`)
-    if (allowedTools) {
-      lines.push(`allowed-tools: ${allowedTools}`)
-    }
-    if (argumentHint) {
-      lines.push(`argument-hint: ${argumentHint}`)
-    }
-  } else {
-    lines.push(`name: ${name}`)
-    lines.push(`description: ${description}`)
+  if (claudeConfig?.allowedTools) {
+    lines.push(`allowed-tools: ${claudeConfig.allowedTools}`)
+  }
+  if (claudeConfig?.argumentHint) {
+    lines.push(`argument-hint: ${claudeConfig.argumentHint}`)
   }
 
   lines.push('---')
 
-  const normalizedSourceBody = normalizeContentBody(body)
-  const normalizedExistingBody = existingClaude ? normalizeContentBody(existingClaude.body) : ''
-  const preamble = existingClaude && normalizedExistingBody === normalizedSourceBody ? existingClaude.preamble : ''
-
-  let content = `${lines.join('\n')}\n${CLAUDE_ARGUMENT_BLOCK}`
-  if (preamble) {
-    content += preamble.replace(/^\n+/, '')
-    if (!content.endsWith('\n\n')) {
-      content = content.replace(/\n*$/, '\n\n')
-    }
-  }
-  content += body.replace(/^\n+/, '')
+  const content = `${lines.join('\n')}\n${CLAUDE_ARGUMENT_BLOCK}${body.replace(/^\n+/, '')}`
   return ensureTrailingNewline(content)
 }
 
@@ -590,7 +581,16 @@ function buildGenericTarget({ name, description, body }) {
   return ensureTrailingNewline(content)
 }
 
-function syncBundledResourcesForTarget({ repoRoot, sourceDir, skillName, bundledResourceDirs, targetRoot, targetSkillDir }) {
+function syncBundledResourcesForTarget({
+  repoRoot,
+  sourceDir,
+  skillName,
+  bundledResourceDirs,
+  entryReferencePath,
+  resourcePrefix,
+  targetRoot,
+  targetSkillDir,
+}) {
   const written = []
 
   for (const dirName of BUNDLED_RESOURCE_DIRS) {
@@ -602,6 +602,12 @@ function syncBundledResourcesForTarget({ repoRoot, sourceDir, skillName, bundled
     const targetResourceDir = path.join(targetSkillDir, dirName)
     fs.mkdirSync(path.dirname(targetResourceDir), { recursive: true })
     fs.cpSync(sourceResourceDir, targetResourceDir, { recursive: true })
+    rewriteInstallPathReferencesInDir(targetResourceDir, {
+      skillName,
+      entryReferencePath,
+      resourcePrefix,
+      bundledResourceDirs,
+    })
     written.push(path.relative(repoRoot, targetResourceDir))
   }
 
@@ -663,6 +669,17 @@ function removeManagedDir(dirPath) {
   }
 }
 
+function rewriteInstallPathReferencesInDir(dirPath, options) {
+  for (const filePath of walkFiles(dirPath)) {
+    if (!VALIDATED_TEXT_EXTENSIONS.has(path.extname(filePath))) {
+      continue
+    }
+
+    const rewritten = rewriteInstallPathReferences(readNormalized(filePath), options)
+    writeFile(filePath, rewritten)
+  }
+}
+
 function syncReadme(readmePath, skillName, description, scenario, readmeSection, replaces = []) {
   const text = readNormalized(readmePath)
   const lines = text.split('\n')
@@ -670,13 +687,8 @@ function syncReadme(readmePath, skillName, description, scenario, readmeSection,
   const targetSection = resolveReadmeSection(skillName, readmeSection)
   const headerIndex = findReadmeTableHeaderIndex(lines, targetSection)
   if (headerIndex === -1) {
-    if (removedSkills.length > 0) {
-      writeFile(readmePath, lines.join('\n'))
-    }
-    return {
-      message: formatReadmeStatus('未更新（未找到 Skills 表头）', removedSkills),
-      removedSkills,
-    }
+    const sectionLabel = README_SECTION_HEADINGS[targetSection] || targetSection
+    fail(`错误：README.md 未通过同步前校验。\n- 缺少 ${sectionLabel} 分组下的 Skills 表头：${README_TABLE_HEADER}`)
   }
 
   const skillPathToken = `\`skills/${skillName}/SKILL.md\``
@@ -708,10 +720,7 @@ function syncReadme(readmePath, skillName, description, scenario, readmeSection,
       scenario: scenario || existingRow?.scenario || DEFAULT_SCENARIO,
     })
     if (lines[existingRowIndex] === row && isReadmeRowInSection(lines, existingRowIndex, targetSection)) {
-      if (normalizedExistingRows) {
-        writeFile(readmePath, lines.join('\n'))
-      }
-      if (removedSkills.length > 0) {
+      if (normalizedExistingRows || removedSkills.length > 0) {
         writeFile(readmePath, lines.join('\n'))
       }
       return {
