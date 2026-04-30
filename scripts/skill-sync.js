@@ -42,6 +42,10 @@ const SOURCE_VALIDATION_RULES = {
         guidance: '改成“已确认路径 / 待确认路径”',
       },
       {
+        phrase: '候选路径',
+        guidance: '改成“已确认路径 / 待确认路径”',
+      },
+      {
         phrase: '候选选项',
         guidance: '改成“待确认问题、待验证项或风险项”',
       },
@@ -60,6 +64,10 @@ const SOURCE_VALIDATION_RULES = {
       {
         phrase: '推荐方案',
         guidance: '改成“已确认方案”或“待确认方案草案”',
+      },
+      {
+        phrase: '推荐指令草稿',
+        guidance: '改成“续执行指令骨架”或“后续指令模板”',
       },
       {
         phrase: '默认路线',
